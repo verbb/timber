@@ -1,0 +1,10 @@
+<div class="timber-table">
+    <timber-utility
+        :log-files="{{ logFiles | json_encode }}"
+        :limit="{{ pageLimit }}"
+        :can-download="{{ currentUser.can('timber-download') ? 'true' : 'false' }}"
+        :can-delete="{{ currentUser.can('timber-delete') ? 'true' : 'false' }}"
+        :socket-port="{{ socketPort }}"
+        :enable-real-time-updates="{{ enableRealTimeUpdates ? 'true' : 'false' }}"
+    ></timber-utility>
+</div>

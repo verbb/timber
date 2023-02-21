@@ -1,0 +1,49 @@
+{% extends 'timber/_layouts/settings' %}
+
+{% import '_includes/forms' as forms %}
+{% import 'verbb-base/_macros' as macros %}
+
+{% set fullPageForm = true %}
+{% set selectedNavItem = 'general' %}
+
+{% block blockContent %}
+
+<input type="hidden" name="action" value="plugins/save-plugin-settings">
+<input type="hidden" name="pluginHandle" value="timber">
+
+{% namespace 'settings' %}
+
+{{ forms.textField({
+    first: true,
+    label: 'Pagination Limit' | t('timber'),
+    instructions: 'Set the number of entries to show per-page for pagination.' | t('timber'),
+    id: 'paginationLimit',
+    name: 'paginationLimit',
+    value: settings.paginationLimit,
+    warning: macros.configWarning('paginationLimit', 'timber'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Enable Real-time Updates' | t('timber'),
+    instructions: 'Whether to enable real-time updates for logs.' | t('timber'),
+    id: 'enableRealTimeUpdates',
+    name: 'enableRealTimeUpdates',
+    on: settings.enableRealTimeUpdates,
+    warning: macros.configWarning('enableRealTimeUpdates', 'timber'),
+    toggle: '.realtime-settings',
+}) }}
+
+<div class="realtime-settings {{ not settings.enableRealTimeUpdates ? 'hidden' }}">
+    {{ forms.textField({
+        label: 'WebSocket Port' | t('timber'),
+        instructions: 'Set the port number for the WebSocket listener, if enabling real-time logging.' | t('timber'),
+        id: 'socketPort',
+        name: 'socketPort',
+        value: settings.socketPort,
+        warning: macros.configWarning('socketPort', 'timber'),
+    }) }}
+</div>
+
+{% endnamespace %}
+
+{% endblock %}

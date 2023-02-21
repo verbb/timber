@@ -1,0 +1,108 @@
+// ==========================================================================
+
+// Timber for Craft CMS
+// Author: Verbb - https://verbb.io/
+
+// ==========================================================================
+
+.sr-only {
+    clip: rect(0,0,0,0);
+    border-width: 0;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+.timber-menu ul {
+    hr {
+        margin: 5px 0;
+    }
+
+    li a {
+        position: relative;
+        padding: 10px 14px;
+        color: #3f4d5a;
+        text-decoration: none;
+        white-space: nowrap;
+        font-size: 14px;
+        outline: 0;
+        display: block;
+
+        &.is-active,
+        &:hover {
+            color: #3f4d5a;
+            background-color: #f3f7fc;
+        }
+
+        &[data-icon] {
+            padding-left: 30px;
+        }
+
+        &::before {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+    }
+}
+
+
+// ==========================================================================
+// Loading
+// ==========================================================================
+
+@keyframes loading {
+    0% {
+        transform: rotate(0)
+    } 100% {
+        transform: rotate(360deg)
+    }
+}
+
+.timber-loading {
+    position: relative;
+    pointer-events: none;
+    color: transparent !important;
+    min-height: 1rem;
+
+    &::after {
+        position: absolute;
+        display: block;
+        height: 1rem;
+        width: 1rem;
+        margin-top: -0.65rem;
+        margin-left: -0.65rem;
+        border-width: 2px;
+        border-style: solid;
+        border-radius: 9999px;
+        border-color: #E5422B;
+        animation: loading 0.5s infinite linear;
+        border-right-color: transparent;
+        border-top-color: transparent;
+        content: "";
+        left: 50%;
+        top: 50%;
+        z-index: 1;
+    }
+}
+
+.timber-loading.timber-loading-lg {
+    min-height: 2rem;
+
+    &::after {
+        height: 2rem;
+        width: 2rem;
+        margin-top: -1rem;
+        margin-left: -1rem;
+    }
+}
+
+button.timber-loading::after {
+    margin-top: -0.5rem;
+    margin-left: -0.5rem;
+}
