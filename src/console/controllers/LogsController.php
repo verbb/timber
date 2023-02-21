@@ -51,7 +51,7 @@ class LogsController extends Controller
 
     public function actionWatch(): int
     {
-        // Watch all log files for changed, in parallel
+        // Watch all log files for changes, in parallel
         $logFiles = FileHelper::findFiles(Craft::getAlias('@storage/logs'), [
             'only' => ['*.log'],
         ]);
