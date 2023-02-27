@@ -28,10 +28,10 @@
         "php": "^8.0.2",
         "craftcms/cms": "^4.0.0",
         "nystudio107/craft-plugin-vite": "^4.0.0-beta.4",
-        "workerman/phpsocket.io": "dev-master",
-        "workerman/phpsocket.io-emitter": "dev-master",
+        "workerman/phpsocket.io": "v1.1.16",
+        "workerman/phpsocket.io-emitter": "v1.0.2",
         "verbb/base": "^2.0.0",
-        "verbb/parallel-process": "dev-master",
+        "verbb/parallel-process": "1.0.0",
         "yii2mod/yii2-array-query": "^1.4"
     },
     "autoload": {
