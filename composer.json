@@ -2,7 +2,7 @@
     "name": "verbb/timber",
     "description": "A utility to show your application logs in the control panel.",
     "type": "craft-plugin",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "keywords": [
         "craft",
         "cms",
