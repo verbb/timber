@@ -52,6 +52,9 @@ class Service extends Component
 
             return $logs;
         });
+        if (!is_array($logs)) {
+            $logs = [];
+        }
 
         return (new ArrayQuery())->from($logs);
     }
