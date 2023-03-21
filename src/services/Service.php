@@ -125,6 +125,10 @@ class Service extends Component
             return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
         }
 
+        if (str_contains($logFile, 'sprig')) {
+            return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
+        }
+
         // Craft 3 logs (not really supported)
         if (str_contains($logFile, 'console.log') || str_contains($logFile, 'queue.log') || str_contains($logFile, 'web.log')) {
             return '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(?P<param1>-|\w+)\]\[(?P<param2>-|\w+)\]\[(?P<param3>-|\w+)\]\[(?P<level>-|\w+)\]\[(?P<category>.*?)\] (?P<message>.*)/s';
@@ -140,6 +144,10 @@ class Service extends Component
         }
 
         if (str_contains($logFile, 'blitz')) {
+            return '/^\[.*\]/';
+        }
+
+        if (str_contains($logFile, 'sprig')) {
             return '/^\[.*\]/';
         }
 
