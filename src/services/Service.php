@@ -129,6 +129,12 @@ class Service extends Component
             return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
         }
 
+        // Custom - to remove at some point
+        // https://github.com/verbb/timber/issues/2
+        if (str_contains($logFile, 'ondemand')) {
+            return '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?P<message>.*)/s';
+        }
+
         // Craft 3 logs (not really supported)
         if (str_contains($logFile, 'console.log') || str_contains($logFile, 'queue.log') || str_contains($logFile, 'web.log')) {
             return '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(?P<param1>-|\w+)\]\[(?P<param2>-|\w+)\]\[(?P<param3>-|\w+)\]\[(?P<level>-|\w+)\]\[(?P<category>.*?)\] (?P<message>.*)/s';
