@@ -1,4 +1,4 @@
-# Timber Plugin for Craft CMS
+# Timber plugin for Craft CMS
 <img width="500" src="https://verbb.imgix.net/plugins/timber/timber-social-card.png?v=2">
 
 Timber is a Craft CMS plugin for viewing application logs in the control panel. With a beautiful and functional interface, incredible performance and a few other goodies, it'll save you having to remote into a server just to look at your logs!
@@ -24,5 +24,5 @@ Get in touch with us via the [Timber Support page](https://verbb.io/craft-plugin
 <h2></h2>
 
 <a href="https://verbb.io" target="_blank">
-  <img width="100" src="https://verbb.io/assets/img/verbb-pill.svg">
+    <img width="100" src="https://verbb.io/assets/img/verbb-pill.svg">
 </a>
