@@ -22,7 +22,6 @@ class Timber extends Plugin
     // Properties
     // =========================================================================
 
-    public bool $hasCpSection = false;
     public bool $hasCpSettings = true;
     public string $schemaVersion = '1.0.0';
 
@@ -41,10 +40,7 @@ class Timber extends Plugin
         parent::init();
 
         self::$plugin = $this;
-
-        $this->_setPluginComponents();
-        $this->_setLogging();
-
+        
         if (Craft::$app->getRequest()->getIsCpRequest()) {
             $this->_registerCpRoutes();
             $this->_registerUtilities();

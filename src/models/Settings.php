@@ -13,10 +13,10 @@ class Settings extends Model
     public bool $enableRealTimeUpdates = false;
 
 
-    // Public Methods
+    // Protected Methods
     // =========================================================================
 
-    public function defineRules(): array
+    protected function defineRules(): array
     {
         $rules = parent::defineRules();
 

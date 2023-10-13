@@ -5,43 +5,49 @@ use verbb\timber\Timber;
 use verbb\timber\services\Service;
 use verbb\timber\web\assets\utility\TimberAsset;
 
-use Craft;
-
-use yii\log\Logger;
-
-use verbb\base\BaseHelper;
+use verbb\base\LogTrait;
+use verbb\base\helpers\Plugin;
 
 use nystudio107\pluginvite\services\VitePluginService;
 
 trait PluginTrait
 {
-    // Static Properties
+    // Properties
     // =========================================================================
 
-    public static Timber $plugin;
+    public static ?Timber $plugin = null;
 
 
-    // Public Methods
+    // Traits
     // =========================================================================
 
-    public static function log(string $message, array $attributes = []): void
+    use LogTrait;
+    
+
+    // Static Methods
+    // =========================================================================
+
+    public static function config(): array
     {
-        if ($attributes) {
-            $message = Craft::t('timber', $message, $attributes);
-        }
+        Plugin::bootstrapPlugin('timber');
 
-        Craft::getLogger()->log($message, Logger::LEVEL_INFO, 'timber');
+        return [
+            'components' => [
+                'service' => Service::class,
+                'vite' => [
+                    'class' => VitePluginService::class,
+                    'assetClass' => TimberAsset::class,
+                    'useDevServer' => true,
+                    'devServerPublic' => 'http://localhost:4020/',
+                    'errorEntry' => 'js/main.js',
+                    'cacheKeySuffix' => '',
+                    'devServerInternal' => 'http://localhost:4020/',
+                    'checkDevServer' => true,
+                    'includeReactRefreshShim' => false,
+                ],
+            ],
+        ];
     }
-
-    public static function error(string $message, array $attributes = []): void
-    {
-        if ($attributes) {
-            $message = Craft::t('timber', $message, $attributes);
-        }
-
-        Craft::getLogger()->log($message, Logger::LEVEL_ERROR, 'timber');
-    }
-
 
     // Public Methods
     // =========================================================================
@@ -54,35 +60,6 @@ trait PluginTrait
     public function getVite(): VitePluginService
     {
         return $this->get('vite');
-    }
-
-
-    // Private Methods
-    // =========================================================================
-
-    private function _setPluginComponents(): void
-    {
-        $this->setComponents([
-            'service' => Service::class,
-            'vite' => [
-                'class' => VitePluginService::class,
-                'assetClass' => TimberAsset::class,
-                'useDevServer' => true,
-                'devServerPublic' => 'http://localhost:4020/',
-                'errorEntry' => 'js/main.js',
-                'cacheKeySuffix' => '',
-                'devServerInternal' => 'http://localhost:4020/',
-                'checkDevServer' => true,
-                'includeReactRefreshShim' => false,
-            ],
-        ]);
-
-        BaseHelper::registerModule();
-    }
-
-    private function _setLogging(): void
-    {
-        BaseHelper::setFileLogging('timber');
     }
 
 }
