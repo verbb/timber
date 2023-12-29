@@ -6,11 +6,11 @@ use verbb\timber\console\ProcessRun;
 use verbb\timber\models\Settings;
 
 use Craft;
+use craft\console\Controller;
+use craft\helpers\Console;
 use craft\helpers\FileHelper;
 
-use yii\console\Controller;
 use yii\console\ExitCode;
-use yii\helpers\Console;
 
 use Exception;
 use Throwable;
@@ -26,11 +26,17 @@ use Symfony\Component\Process\Process;
 use Graze\ParallelProcess\Pool;
 use Graze\ParallelProcess\Event\RunEvent;
 
+/**
+ * Manages Timber logs.
+ */
 class LogsController extends Controller
 {
     // Public Methods
     // =========================================================================
 
+    /**
+     * Start a Socket.io server to listen to logs in real-time.
+     */
     public function actionRun(): int
     {
         /* @var Settings $settings */
@@ -49,6 +55,9 @@ class LogsController extends Controller
         return ExitCode::OK;
     }
 
+    /**
+     * Poll log files for changes.
+     */
     public function actionWatch(): int
     {
         // Watch all log files for changes, in parallel
