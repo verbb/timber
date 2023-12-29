@@ -3,6 +3,7 @@ namespace verbb\timber\services;
 
 use Craft;
 use craft\base\Component;
+use craft\helpers\StringHelper;
 
 use yii2mod\query\ArrayQuery;
 
@@ -101,12 +102,17 @@ class Service extends Component
             $datetime = $matches['datetime'] ?? null;
 
             if ($datetime) {
+                $message = $matches['message'] ?? null;
+
+                // Ensure we escape message content
+                $message = StringHelper::escape($message);
+
                 $logs[$key] = [
                     'datetime' => $matches['datetime'] ?? null,
                     'channel' => $matches['channel'] ?? null,
                     'level' => $matches['level'] ?? null,
                     'category' => $matches['category'] ?? null,
-                    'message' => $matches['message'] ?? null,
+                    'message' => $message,
                     'context' => $matches['context'] ?? null,
                 ];
             } else {

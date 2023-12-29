@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3 - 2023-12-28
+
+### Fixed
+- Fix lack of sanitizing of log file content.
+
 ## 1.0.2 - 2023-05-27
 
 ### Added
