@@ -71,7 +71,7 @@ class Timber extends Plugin
 
     private function _registerUtilities(): void
     {
-        Event::on(Utilities::class, Utilities::EVENT_REGISTER_UTILITY_TYPES, function(RegisterComponentTypesEvent $event) {
+        Event::on(Utilities::class, Utilities::EVENT_REGISTER_UTILITIES, function(RegisterComponentTypesEvent $event) {
             $event->types[] = LogUtility::class;
         });
     }
