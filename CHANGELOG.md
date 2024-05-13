@@ -1,15 +1,10 @@
 # Changelog
 
-## 3.0.0-beta.2 - 2024-03-05
-
-### Fixed
-- Fix an install error related to `nystudio107/craft-plugin-vite`.
-
-## 2.0.0-beta.1 - 2024-03-04
+## 3.0.0 - 2024-05-13
 
 ### Changed
 - Now requires PHP `8.2.0+`.
-- Now requires Craft `5.0.0-beta.1+`.
+- Now requires Craft `5.0.0+`.
 
 ## 1.0.3 - 2023-12-28
 
