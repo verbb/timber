@@ -1,6 +1,11 @@
 # Changelog
 
-## 3.0.0 - 2024-05-13
+## 2.0.1 - 2024-05-26
+
+### Fixed
+- Fix an error with `verbb/parallel-process`.
+
+## 2.0.0 - 2024-05-13
 
 ### Changed
 - Now requires PHP `8.2.0+`.
