@@ -31,7 +31,7 @@
         "workerman/phpsocket.io": "^v1.1.16",
         "workerman/phpsocket.io-emitter": "^v1.0.2",
         "verbb/base": "^3.0.0",
-        "verbb/parallel-process": "^1.0.0",
+        "verbb/parallel-process": "^1.0.3",
         "yii2mod/yii2-array-query": "^1.4"
     },
     "autoload": {
