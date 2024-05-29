@@ -46,7 +46,7 @@ class Timber extends Plugin
             $this->_registerUtilities();
         }
 
-        if (Craft::$app->getEdition() === Craft::Pro) {
+        if (Craft::$app->getEdition() !== Craft::Solo) {
             $this->_registerPermissions();
         }
     }
