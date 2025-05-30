@@ -214,7 +214,13 @@ class LogsController extends Controller
 
         $logs = Craft::getAlias('@storage/logs');
 
-        FileHelper::clearDirectory($logs);
+        FileHelper::clearDirectory($logs, [
+            'except' => [
+                // Allow some hidden files
+                '.gitignore',
+                '.gitkeep',
+            ],
+        ]);
 
         return $this->asJson(['success' => true]);
     }
