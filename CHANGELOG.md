@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.3 - 2025-07-18
+
+### Changed
+- When deleting all logs, hidden files like `.gitignore` and `.gitkeep` are retained.
+
 ## 2.0.2 - 2024-09-07
 
 ### Added
