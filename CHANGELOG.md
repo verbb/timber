@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.4 - 2025-07-18
+
+### Changed
+- When deleting all logs, hidden files like `.gitignore` and `.gitkeep` are retained.
+- Update English translations.
+
 ## 1.0.3 - 2023-12-28
 
 ### Fixed
