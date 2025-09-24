@@ -2,7 +2,7 @@
     "name": "verbb/timber",
     "description": "A utility to show your application logs in the control panel.",
     "type": "craft-plugin",
-    "version": "2.0.3",
+    "version": "3.0.0-alpha.1",
     "keywords": [
         "craft",
         "cms",
@@ -25,12 +25,12 @@
         }
     ],
     "require": {
-        "php": "^8.2",
-        "craftcms/cms": "^5.0.0",
+        "php": "^8.4",
+        "craftcms/cms": "6.x-dev",
         "nystudio107/craft-plugin-vite": "^5.0.0",
         "workerman/phpsocket.io": "^v1.1.16",
         "workerman/phpsocket.io-emitter": "^v1.0.2",
-        "verbb/base": "^3.0.0",
+        "verbb/base": "dev-craft-6",
         "verbb/parallel-process": "^1.0.3",
         "yii2mod/yii2-array-query": "^1.4"
     },
@@ -42,7 +42,9 @@
     "extra": {
         "name": "Timber",
         "handle": "timber",
-        "changelogUrl": "https://raw.githubusercontent.com/verbb/timber/craft-5/CHANGELOG.md",
+        "changelogUrl": "https://raw.githubusercontent.com/verbb/timber/craft-6/CHANGELOG.md",
         "class": "verbb\\timber\\Timber"
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
