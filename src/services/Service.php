@@ -53,6 +53,7 @@ class Service extends Component
 
             return $logs;
         });
+
         if (!is_array($logs)) {
             $logs = [];
         }
@@ -127,11 +128,16 @@ class Service extends Component
             return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
         }
 
+        // Plugin-specific - TODO, make more configurable
         if (str_contains($logFile, 'blitz')) {
             return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
         }
 
         if (str_contains($logFile, 'sprig')) {
+            return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
+        }
+
+        if (str_contains($logFile, 'craftagram')) {
             return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
         }
 
@@ -155,11 +161,16 @@ class Service extends Component
             return '/^\[.*\]/';
         }
 
+        // Plugin-specific - TODO, make more configurable
         if (str_contains($logFile, 'blitz')) {
             return '/^\[.*\]/';
         }
 
         if (str_contains($logFile, 'sprig')) {
+            return '/^\[.*\]/';
+        }
+
+        if (str_contains($logFile, 'craftagram')) {
             return '/^\[.*\]/';
         }
 
