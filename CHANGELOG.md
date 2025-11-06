@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.4 - 2025-11-06
+
+### Fixed
+- Fix Craftagram log support.
+
 ## 2.0.3 - 2025-07-18
 
 ### Changed
