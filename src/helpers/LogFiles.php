@@ -30,23 +30,40 @@ class LogFiles
     // =========================================================================
 
     /**
-     * Dated Craft files (`web-2026-08-19.log`) and undated plugin files (`phperrors.log`)
-     * share a stem. Permissions and include/exclude lists grant the stem, not a single day.
+     * Dated Craft files (`web-2026-08-19.log`), rotated files (`web.log.1.gz`), and
+     * undated plugin files (`phperrors.log`) share a stem. Permissions grant the stem.
      */
     public static function stem(string $path): string
     {
         $filename = basename($path);
 
-        if (preg_match('/^(.+?)(?:-\d{4}-\d{2}-\d{2})?\.log$/', $filename, $matches)) {
+        if (str_ends_with(strtolower($filename), '.gz')) {
+            $filename = substr($filename, 0, -3);
+        }
+
+        // Craft dated: web-2026-08-19.log
+        if (preg_match('/^(.+?)-\d{4}-\d{2}-\d{2}\.(log|txt)$/', $filename, $matches)) {
+            return $matches[1];
+        }
+
+        // Logrotate numbered: web.log.1
+        if (preg_match('/^(.+?)\.(log|txt)\.\d+$/', $filename, $matches)) {
+            return $matches[1];
+        }
+
+        // Logrotate dated suffix: web.log-20260325
+        if (preg_match('/^(.+?)\.(log|txt)-\d{8}$/', $filename, $matches)) {
+            return $matches[1];
+        }
+
+        // Plain: web.log, phperrors.log, custom.txt
+        if (preg_match('/^(.+?)\.(log|txt)$/', $filename, $matches)) {
             return $matches[1];
         }
 
         return pathinfo($filename, PATHINFO_FILENAME);
     }
 
-    /**
-     * @return array<int, array{path: string, size: int, stem: string}>
-     */
     public static function findAll(): array
     {
         if (self::$allFiles !== null) {
@@ -58,16 +75,21 @@ class LogFiles
 
         if ($logsDir && is_dir($logsDir)) {
             $paths = FileHelper::findFiles($logsDir, [
-                'only' => ['*.log'],
+                'only' => ['*.log', '*.log.*', '*.txt', '*.txt.*', '*.gz'],
             ]);
 
             sort($paths);
 
             foreach ($paths as $path) {
+                if (!self::isDiscoverableLogFilename(basename($path))) {
+                    continue;
+                }
+
                 $files[] = [
                     'path' => $path,
                     'size' => filesize($path) ?: 0,
                     'stem' => self::stem($path),
+                    'compressed' => str_ends_with(strtolower($path), '.gz'),
                 ];
             }
         }
@@ -85,9 +107,38 @@ class LogFiles
     }
 
     /**
+     * Active `.log` files suitable for `tail -f` realtime updates (not rotations or gzip).
+     */
+    public static function watchablePaths(): array
+    {
+        $paths = [];
+
+        foreach (self::findAll() as $file) {
+            $basename = basename($file['path']);
+
+            if ($file['compressed']) {
+                continue;
+            }
+
+            if (!preg_match('/\.log$/', $basename)) {
+                continue;
+            }
+
+            // Skip numbered rotations like web.log.1 — they are static archives.
+            if (preg_match('/\.log\.\d+$/', $basename)) {
+                continue;
+            }
+
+            $paths[] = $file['path'];
+        }
+
+        sort($paths);
+
+        return $paths;
+    }
+
+    /**
      * Unique stems in the catalog, sorted — used to register nested permissions.
-     *
-     * @return string[]
      */
     public static function discoverStems(): array
     {
@@ -105,8 +156,6 @@ class LogFiles
 
     /**
      * Files the current user may see: site-wide include/exclude first, then permissions.
-     *
-     * @return array<int, array{path: string, size: int}>
      */
     public static function visible(?User $user = null): array
     {
@@ -178,7 +227,7 @@ class LogFiles
 
     public static function isAccessibleLogPath(string $path): bool
     {
-        // The catalog is the allowlist: default `@storage/logs/*.log`, plus anything
+        // The catalog is the allowlist: default `@storage/logs` discovery, plus anything
         // added (or minus anything removed) via EVENT_MODIFY_LOG_FILES.
         return self::catalogFile($path) !== null;
     }
@@ -187,12 +236,9 @@ class LogFiles
     // Private Methods
     // =========================================================================
 
-    /**
-     * @return array{path: string, size: int, stem: string}|null
-     */
     private static function catalogFile(string $path): ?array
     {
-        if (!str_ends_with($path, '.log')) {
+        if (!self::isDiscoverableLogFilename(basename($path))) {
             return null;
         }
 
@@ -207,10 +253,18 @@ class LogFiles
         return null;
     }
 
-    /**
-     * @param array<int, array{path?: string, size?: int, stem?: string}|string> $files
-     * @return array<int, array{path: string, size: int, stem: string}>
-     */
+    private static function isDiscoverableLogFilename(string $filename): bool
+    {
+        if ($filename === '' || str_starts_with($filename, '.')) {
+            return false;
+        }
+
+        return (bool)preg_match(
+            '/^(?:.+\.(?:log|txt)(?:-\d{4}-\d{2}-\d{2})?(?:\.\d+|-\d{8})?|.+\.(?:log|txt))(?:\.gz)?$/',
+            $filename
+        );
+    }
+
     private static function normalizeLogFiles(array $files): array
     {
         $normalized = [];
@@ -219,7 +273,7 @@ class LogFiles
         foreach ($files as $file) {
             $path = is_string($file) ? $file : (string)($file['path'] ?? '');
 
-            if ($path === '' || !str_ends_with($path, '.log') || !is_file($path)) {
+            if ($path === '' || !self::isDiscoverableLogFilename(basename($path)) || !is_file($path)) {
                 continue;
             }
 
@@ -239,6 +293,9 @@ class LogFiles
                 'stem' => (is_array($file) && ($file['stem'] ?? '') !== '')
                     ? (string)$file['stem']
                     : self::stem($resolved),
+                'compressed' => (is_array($file) && isset($file['compressed']))
+                    ? (bool)$file['compressed']
+                    : str_ends_with(strtolower($resolved), '.gz'),
             ];
         }
 
