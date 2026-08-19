@@ -5,6 +5,9 @@
 ### Added
 - Add per-log-file view permissions, plus optional include/exclude lists, so users can be limited to specific log files ([#3](https://github.com/verbb/timber/issues/3)).
 - Add a `modifyLogFiles` event so modules can add or remove log files from the catalog.
+- Discover rotated, compressed, and `.txt` log files in `@storage/logs` (for example `web.log.1.gz`, `web.log-20260325.gz`).
+- Parse common log line shapes by content (Craft 5, Craft 3, Monolog, Formie, bracketed timestamps, bare datetime). Unmatched lines stay visible instead of being dropped.
+- Add a `modifyLogParsers` event so modules can register custom line parsers and line-start patterns per log file.
 
 ### Changed
 - Rebuild the Logs utility UI on [Plugin Kit](https://docs.verbb.io/plugin-kit/web/) (web components). Existing log viewing, filtering, search, pagination, download/delete, and real-time updates are preserved.

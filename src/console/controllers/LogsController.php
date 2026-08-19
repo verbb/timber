@@ -3,12 +3,12 @@ namespace verbb\timber\console\controllers;
 
 use verbb\timber\Timber;
 use verbb\timber\console\ProcessRun;
+use verbb\timber\helpers\LogFiles;
 use verbb\timber\models\Settings;
 
 use Craft;
 use craft\console\Controller;
 use craft\helpers\Console;
-use craft\helpers\FileHelper;
 
 use yii\console\ExitCode;
 
@@ -60,10 +60,8 @@ class LogsController extends Controller
      */
     public function actionWatch(): int
     {
-        // Watch all log files for changes, in parallel
-        $logFiles = FileHelper::findFiles(Craft::getAlias('@storage/logs'), [
-            'only' => ['*.log'],
-        ]);
+        // Watch active log files for changes, in parallel (not gzip or numbered rotations).
+        $logFiles = LogFiles::watchablePaths();
 
         $pool = new Pool();
 

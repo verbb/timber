@@ -3,7 +3,7 @@ namespace verbb\timber\services;
 
 use Craft;
 use craft\base\Component;
-use craft\helpers\StringHelper;
+use verbb\timber\helpers\LogParser;
 
 use yii2mod\query\ArrayQuery;
 
@@ -14,44 +14,15 @@ class Service extends Component
 
     public function getLogs(string $logFile): ArrayQuery
     {
-        $cacheKey = md5($logFile . ':' . filesize($logFile));
+        $cacheKey = md5(
+            LogParser::VERSION . ':'
+            . LogParser::cacheKeySuffix($logFile) . ':'
+            . $logFile . ':'
+            . filesize($logFile)
+        );
 
         $logs = Craft::$app->getCache()->getOrSet($cacheKey, function() use ($logFile) {
-            $fileHandler = fopen($logFile, 'rb');
-
-            $logs = [];
-            $key = -1;
-
-            // Regex for the start of a log file. Kept minimal for performance
-            $lineStart = $this->getLinePattern($logFile);
-
-            // Loop through all the lines until the eof or we say we're done
-            while (!feof($fileHandler)) {
-                // Get the next line of content
-                $line = fgets($fileHandler);
-
-                // Find every line that matches the start of a log file. Used due to log entries taking over multiple lines
-                // So find a line that matches `2022-01-01 00:00:00 ...`, which will be used to find the first and next log lines.
-                if (preg_match($lineStart, $line)) {
-                    $key++;
-
-                    $logs[$key] = $line;
-                } else {
-                    // Capture everything in between two lines starting with datestrings
-                    $logs[$key] .= $line;
-                }
-            }
-
-            $this->getLogContent($logFile, $logs);
-
-            fclose($fileHandler);
-
-            // Don't cache something that's empty
-            if (!$logs) {
-                return false;
-            }
-
-            return $logs;
+            return $this->readLogFile($logFile);
         });
 
         if (!is_array($logs)) {
@@ -65,116 +36,95 @@ class Service extends Component
     {
         $logs = [];
         $key = -1;
+        $lineStart = LogParser::lineStartPattern($logFile);
 
-        // Regex for the start of a log file. Kept minimal for performance
-        $lineStart = $this->getLinePattern($logFile);
-
-        // Loop through all the lines until the eof or we say we're done
         foreach (explode(PHP_EOL, $data) as $line) {
-            // Find every line that matches the start of a log file. Used due to log entries taking over multiple lines
-            // So find a line that matches `2022-01-01 00:00:00 ...`, which will be used to find the first and next log lines.
             if (preg_match($lineStart, $line)) {
                 $key++;
-
                 $logs[$key] = $line;
-            } else {
-                // Capture everything in between two lines starting with datestrings
+            } elseif ($key >= 0) {
                 $logs[$key] .= $line;
+            } elseif ($line !== '') {
+                $key = 0;
+                $logs[$key] = $line;
             }
         }
 
-        $this->getLogContent($logFile, $logs);
-
-        return $logs;
+        return $this->parseLogEntries($logs, $logFile);
     }
 
 
     // Protected Methods
     // =========================================================================
 
-    protected function getLogContent(string $logFile, array &$logs): void
+    protected function readLogFile(string $logFile): array|false
     {
-        $pattern = $this->getPattern($logFile);
+        [$readLine, $close] = $this->openLogFile($logFile);
 
-        foreach ($logs as $key => $log) {
-            preg_match($pattern, $log, $matches);
+        if ($readLine === null) {
+            return false;
+        }
 
-            // `preg_match` doesn't support named grouped, so go manual
-            $datetime = $matches['datetime'] ?? null;
+        $logs = [];
+        $key = -1;
+        $lineStart = LogParser::lineStartPattern($logFile);
 
-            if ($datetime) {
-                $message = $matches['message'] ?? null;
-
-                // Ensure we escape message content
-                $message = StringHelper::escape($message);
-
-                $logs[$key] = [
-                    'datetime' => $matches['datetime'] ?? null,
-                    'channel' => $matches['channel'] ?? null,
-                    'level' => $matches['level'] ?? null,
-                    'category' => $matches['category'] ?? null,
-                    'message' => $message,
-                    'context' => $matches['context'] ?? null,
-                ];
-            } else {
-                unset($logs[$key]);
+        while (($line = $readLine()) !== false) {
+            if (preg_match($lineStart, $line)) {
+                $key++;
+                $logs[$key] = $line;
+            } elseif ($key >= 0) {
+                $logs[$key] .= $line;
+            } elseif ($line !== '') {
+                $key = 0;
+                $logs[$key] = $line;
             }
         }
+
+        $close();
+
+        $logs = $this->parseLogEntries($logs, $logFile);
+
+        if (!$logs) {
+            return false;
+        }
+
+        return $logs;
     }
 
-    protected function getPattern(string $logFile): string
+    protected function parseLogEntries(array $logs, string $logFile): array
     {
-        if (str_contains($logFile, 'phperrors')) {
-            return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
+        foreach ($logs as $key => $log) {
+            $logs[$key] = LogParser::parseEntry($log, $logFile);
         }
 
-        // Plugin-specific - TODO, make more configurable
-        if (str_contains($logFile, 'blitz')) {
-            return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
-        }
-
-        if (str_contains($logFile, 'sprig')) {
-            return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
-        }
-
-        if (str_contains($logFile, 'craftagram')) {
-            return '/^\[(?<datetime>.*)\] (?<message>.*)/s';
-        }
-
-        // Custom - to remove at some point
-        // https://github.com/verbb/timber/issues/2
-        if (str_contains($logFile, 'ondemand')) {
-            return '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?P<message>.*)/s';
-        }
-
-        // Craft 3 logs (not really supported)
-        if (str_contains($logFile, 'console.log') || str_contains($logFile, 'queue.log') || str_contains($logFile, 'web.log')) {
-            return '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(?P<param1>-|\w+)\]\[(?P<param2>-|\w+)\]\[(?P<param3>-|\w+)\]\[(?P<level>-|\w+)\]\[(?P<category>.*?)\] (?P<message>.*)/s';
-        }
-
-        return '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (\[(?:(?P<channel>\w+)\.)?(?P<level>\w+)\])(?: \[(?P<category>.*?)\])? (?P<message>.*)/s';
+        return $logs;
     }
 
-    protected function getLinePattern(string $logFile): string
+    protected function openLogFile(string $logFile): array
     {
-        if (str_contains($logFile, 'phperrors')) {
-            return '/^\[.*\]/';
+        if (str_ends_with(strtolower($logFile), '.gz')) {
+            $handle = @gzopen($logFile, 'rb');
+
+            if ($handle === false) {
+                return [null, static fn() => null];
+            }
+
+            return [
+                static fn() => gzgets($handle),
+                static fn() => gzclose($handle),
+            ];
         }
 
-        // Plugin-specific - TODO, make more configurable
-        if (str_contains($logFile, 'blitz')) {
-            return '/^\[.*\]/';
+        $handle = @fopen($logFile, 'rb');
+
+        if ($handle === false) {
+            return [null, static fn() => null];
         }
 
-        if (str_contains($logFile, 'sprig')) {
-            return '/^\[.*\]/';
-        }
-
-        if (str_contains($logFile, 'craftagram')) {
-            return '/^\[.*\]/';
-        }
-
-        return '/^\d{4}-\d{2}-\d{2}/';
+        return [
+            static fn() => fgets($handle),
+            static fn() => fclose($handle),
+        ];
     }
-
 }
