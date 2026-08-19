@@ -8,6 +8,7 @@ use verbb\timber\models\Settings;
 use Craft;
 use craft\base\Utility;
 use craft\helpers\FileHelper;
+use craft\helpers\Json;
 
 class LogUtility extends Utility
 {
@@ -35,14 +36,9 @@ class LogUtility extends Utility
         $settings = Timber::$plugin->getSettings();
         $view = Craft::$app->getView();
 
-        Plugin::registerAsset('utility/src/js/timber.js');
-        $js = 'new Craft.Timber.Utility();';
-
-        // Wait for Hyper JS to be loaded, either through an event listener, or by a flag.
-        // This covers if this script is run before, or after the Hyper JS has loaded
-        $view->registerJs('document.addEventListener("vite-script-loaded", function(e) {' .
-            'if (e.detail.path === "utility/src/js/timber.js") {' . $js . '}' .
-        '}); if (Craft.TimberReady) {' . $js . '}');
+        // Register Plugin Kit web components + the Timber app; the app auto-mounts
+        // `[data-timber-auto-mount]` on load (no vite-script-loaded handshake needed).
+        Plugin::registerUtilityAssets();
 
         $logFiles = FileHelper::findFiles(Craft::getAlias('@storage/logs'), [
             'only' => ['*.log'],
@@ -57,11 +53,19 @@ class LogUtility extends Utility
             ];
         }
 
-        return $view->renderTemplate('timber/_utility', [
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        $componentSettings = [
             'logFiles' => $logFiles,
-            'pageLimit' => $settings->paginationLimit,
+            'limit' => $settings->paginationLimit,
             'socketPort' => $settings->socketPort,
             'enableRealTimeUpdates' => $settings->enableRealTimeUpdates,
+            'canDownload' => (bool)$currentUser?->can('timber-download'),
+            'canDelete' => (bool)$currentUser?->can('timber-delete'),
+        ];
+
+        return $view->renderTemplate('timber/_utility', [
+            'componentSettings' => Json::encode($componentSettings, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
         ]);
     }
 }

@@ -34,4 +34,12 @@ class Plugin
         }
     }
 
+    public static function registerUtilityAssets(): void
+    {
+        // Register the Plugin Kit web components before the utility app mounts, so custom
+        // element upgrades are page-level asset work rather than per-mount init work.
+        self::registerAsset('utility/src/js/plugin-kit-register.ts');
+        self::registerAsset('utility/src/js/timber.ts');
+    }
+
 }

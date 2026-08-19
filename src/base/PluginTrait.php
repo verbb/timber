@@ -8,6 +8,8 @@ use verbb\timber\web\assets\utility\TimberAsset;
 use verbb\base\LogTrait;
 use verbb\base\helpers\Plugin;
 
+use craft\helpers\App;
+
 use nystudio107\pluginvite\services\VitePluginService;
 
 trait PluginTrait
@@ -37,9 +39,9 @@ trait PluginTrait
                 'vite' => [
                     'class' => VitePluginService::class,
                     'assetClass' => TimberAsset::class,
-                    'useDevServer' => true,
+                    'useDevServer' => App::parseBooleanEnv('$TIMBER_USE_VITE_DEV_SERVER') ?? false,
                     'devServerPublic' => 'http://localhost:4020/',
-                    'errorEntry' => 'js/main.js',
+                    'errorEntry' => 'utility/src/js/timber.ts',
                     'cacheKeySuffix' => '',
                     'devServerInternal' => 'http://localhost:4020/',
                     'checkDevServer' => true,

@@ -1,0 +1,702 @@
+/* Timber utility layout. Plugin Kit owns chrome; this file is composition + table layout
+   using --pk-* tokens (legacy #f3f7fb / #84919e / tippy themes removed). */
+
+/* Bleed out of Craft content padding — BEFORE mounted on `.timber-table` which carried
+   this margin; AFTER mounts on `.timber-utility-app`, so the bleed lives here. */
+.timber-utility-app {
+    display: block;
+    margin: calc(var(--xl, 1.5rem) * -1);
+    height: calc(100vh - 270px);
+    min-height: 400px;
+}
+
+.ti-wrap {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.ti-head {
+    border-bottom: 1px solid var(--pk-color-border, rgba(96, 125, 159, 0.25));
+}
+
+/* -------------------------------------------------------------------------
+   File picker
+   ------------------------------------------------------------------------- */
+
+.ti-file {
+    display: flex;
+    align-items: center;
+    gap: var(--pk-spacing-2, 0.5rem);
+    padding: var(--pk-spacing-2, 0.5rem);
+    background: var(--pk-color-gray-050, #f3f7fc);
+    border-radius: var(--pk-radius-md, 0.375rem) var(--pk-radius-md, 0.375rem) 0 0;
+}
+
+.ti-file-label {
+    margin-left: var(--pk-spacing-2, 0.5rem);
+    margin-right: 0;
+    font-size: var(--pk-font-size-xs, 0.75rem);
+    color: var(--pk-color-gray-500, #596673);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ti-file-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ti-file-combobox {
+    display: block;
+    width: 100%;
+    --pk-combobox-min-height: 2.375rem;
+    --pk-combobox-padding-block: 0.5rem;
+    --pk-combobox-padding-inline: 0.75rem;
+    --pk-combobox-font-size: var(--pk-font-size-sm, 0.875rem);
+    --pk-combobox-fill: var(--pk-color-white, #fff);
+    --pk-combobox-fill-hover: var(--pk-color-white, #fff);
+}
+
+.ti-file-combobox::part(control) {
+    border: 1px solid #cdd8e4;
+    border-radius: 5px;
+    background: var(--pk-color-white, #fff);
+}
+
+/* Kit panel defaults to `width: max-content` — pin to the synced popup width so
+   long filenames stay inside the anchor, not the viewport. */
+.ti-file-combobox::part(panel) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.ti-file-combobox::part(panel-body) {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.ti-file-combobox pk-option {
+    max-width: 100%;
+}
+
+.ti-file-option-content {
+    display: flex;
+    align-items: center;
+    gap: var(--pk-spacing-2, 0.5rem);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.ti-file-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-right: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ti-file-name span {
+    opacity: 0.5;
+}
+
+.ti-file-size {
+    color: var(--pk-color-gray-500, #596673);
+    font-size: var(--pk-font-size-xs, 0.75rem);
+    white-space: nowrap;
+}
+
+.ti-file-menu-meta {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: var(--pk-spacing-1, 0.25rem);
+}
+
+.ti-file-menu-meta pk-button {
+    align-self: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--pk-color-gray-500);
+    --pk-btn-icon-size: 0.75rem;
+}
+
+.ti-file-menu-meta pk-button::part(base) {
+    width: 1.25rem;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    min-height: 1.25rem;
+    padding: 0;
+}
+
+.ti-file-menu-meta pk-button:hover {
+    color: var(--pk-color-gray-700);
+}
+
+.ti-settings-menu {
+    display: inline-flex;
+    align-self: center;
+    color: var(--pk-color-gray-400);
+    --pk-color-gray-700: var(--pk-color-gray-400);
+}
+
+.ti-settings-menu pk-button,
+.ti-button-refresh {
+    align-self: center;
+}
+
+.ti-button-refresh {
+    --pk-btn-icon-size: 1.25rem;
+    --pk-color-gray-700: var(--pk-color-gray-600);
+}
+
+.ti-file-combobox pk-option .ti-file-name {
+    display: block;
+}
+
+/* -------------------------------------------------------------------------
+   Filters + search
+   ------------------------------------------------------------------------- */
+
+.ti-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--pk-spacing-2, 0.5rem);
+    padding: var(--pk-spacing-2, 0.5rem);
+    border-top: 1px solid var(--pk-color-border, rgba(96, 125, 159, 0.25));
+}
+
+.ti-header[hidden],
+.ti-button-refresh[hidden] {
+    display: none !important;
+}
+
+.ti-dropdown-wrap {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.ti-dropdown {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--pk-spacing-2, 0.5rem);
+    box-sizing: border-box;
+    height: var(--pk-btn-height-default, 2.125rem);
+    min-height: var(--pk-btn-height-default, 2.125rem);
+    padding: 0 var(--pk-spacing-3, 0.75rem);
+    border: var(--pk-input-border, 1px solid rgba(96, 125, 159, 0.25));
+    border-radius: var(--pk-input-border-radius, var(--pk-radius-sm, 0.25rem));
+    background: var(--pk-color-bg, #fff);
+    color: var(--pk-color-gray-800, #202b38);
+    font-size: var(--pk-font-size-sm, 0.875rem);
+    line-height: 1.25rem;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.ti-search {
+    flex: 1 1 auto;
+    min-width: 0;
+    --pk-input-bg: var(--pk-color-white, #fff);
+}
+
+.ti-search pk-icon[slot='clear-icon'] {
+    width: 0.875rem;
+    height: 0.875rem;
+    font-size: 0.875rem;
+}
+
+.ti-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--pk-spacing-4, 1rem);
+    margin: var(--pk-spacing-1, 0.25rem) var(--pk-spacing-4, 1rem);
+    color: var(--pk-color-gray-500, #596673);
+    font-size: var(--pk-font-size-xs, 0.75rem);
+    font-weight: 600;
+}
+
+.ti-filter-header-button {
+    color: var(--pk-color-sky-600, #0b69cb);
+    font-weight: 400;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    padding: 0;
+}
+
+.ti-filter-empty {
+    color: var(--pk-color-gray-500, #596673);
+    font-size: var(--pk-font-size-xs, 0.75rem);
+    padding: var(--pk-spacing-1, 0.25rem) var(--pk-spacing-4, 1rem);
+    text-align: center;
+}
+
+/* Native Kit items retain roving focus/typeahead; the leading check is decorative. */
+.ti-filter-row {
+    width: 100%;
+    --pk-dropdown-item-padding-block: var(--pk-spacing-2, 0.5rem);
+    --pk-dropdown-item-padding-inline: var(--pk-spacing-4, 1rem);
+    --pk-dropdown-item-font-size: var(--pk-font-size-sm, 0.875rem);
+    --pk-dropdown-item-line-height: 1.25rem;
+}
+
+.ti-filter-row::part(item) {
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ti-filter-row-content {
+    display: flex;
+    align-items: center;
+    gap: var(--pk-spacing-2, 0.5rem);
+    min-width: 0;
+}
+
+.ti-filter-checkbox {
+    display: inline-flex;
+    flex: 0 0 1.125rem;
+    align-items: center;
+    justify-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    box-sizing: border-box;
+    border: var(--pk-input-border, 1px solid rgba(96, 125, 159, 0.25));
+    border-radius: var(--pk-radius-sm, 0.25rem);
+    background: var(--pk-color-white, #fff);
+    color: var(--pk-color-gray-700);
+}
+
+.ti-filter-checkbox pk-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+    font-size: 0.75rem;
+    opacity: 0;
+}
+
+.ti-filter-row.is-checked .ti-filter-checkbox pk-icon {
+    opacity: 1;
+}
+
+.ti-filter-row:focus-within .ti-filter-checkbox {
+    /* The label slot clips overflow, so use an in-bounds focus treatment. */
+    border-color: var(--pk-color-sky-600, #0b69cb);
+    box-shadow: inset 0 0 0 1px var(--pk-color-sky-600, #0b69cb);
+}
+
+.ti-filter-row-content > .ti-filter-label,
+.ti-filter-row-content > .log-label {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ti-filter-row .log-count {
+    flex: 0 0 auto;
+    margin-left: var(--pk-spacing-4, 1rem);
+}
+
+.ti-filter-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.log-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.log-label.log-level-info,
+.log-label.log-level-debug {
+    color: var(--pk-color-sky-600, #0b69cb);
+}
+
+.log-label.log-level-warning {
+    color: var(--pk-color-amber-600, #b45309);
+}
+
+.log-label.log-level-error {
+    color: var(--pk-color-red-600, #c51f3d);
+}
+
+.log-count {
+    color: var(--pk-color-gray-500, #596673);
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.ti-filter-menu::part(panel) {
+    min-width: 12.5rem;
+    /* BEFORE Tippy menu used max-height: 60vh — kit panel is overflow:auto but
+       unconstrained height won't scroll until capped. */
+    max-height: min(60vh, 24rem);
+    overflow-y: auto;
+}
+
+/* -------------------------------------------------------------------------
+   Body panes
+   ------------------------------------------------------------------------- */
+
+.ti-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.timber-table {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.timber-loading-pane,
+.timber-error-pane {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 240px;
+    box-sizing: border-box;
+    padding: var(--pk-spacing-6, 1.5rem);
+    border-radius: 0 0 var(--pk-radius-md, 0.375rem) var(--pk-radius-md, 0.375rem);
+    background-color: var(--pk-color-gray-050, #f3f7fc);
+    background-image:
+        linear-gradient(to right, #ecf2f9 1px, transparent 0),
+        linear-gradient(to bottom, #ecf2f9 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+    box-shadow: inset 0 1px 3px -1px color-mix(in srgb, var(--pk-color-gray-400, #8f9bab) 55%, transparent);
+}
+
+.ti-empty-text {
+    font-size: 1.2rem;
+    opacity: 0.7;
+}
+
+.timber-error-content {
+    display: flex;
+    align-items: center;
+    gap: var(--pk-spacing-2, 0.5rem);
+    text-align: center;
+}
+
+/* -------------------------------------------------------------------------
+   Real HTML table
+   ------------------------------------------------------------------------- */
+
+.ti-table-root {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.ti-table-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    height: 100%;
+}
+
+.ti-table {
+    border-spacing: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    text-indent: 0;
+    border-color: inherit;
+}
+
+.ti-table td,
+.ti-table th {
+    padding-top: var(--pk-spacing-2, 0.5rem);
+    padding-bottom: var(--pk-spacing-2, 0.5rem);
+}
+
+.ti-table td:first-child,
+.ti-table th:first-child {
+    padding-left: var(--pk-spacing-4, 1rem);
+}
+
+.ti-table td:last-child,
+.ti-table th:last-child {
+    padding-right: var(--pk-spacing-4, 1rem);
+}
+
+.ti-table td:not(:last-child),
+.ti-table th:not(:last-child) {
+    padding-right: var(--pk-spacing-2, 0.5rem);
+}
+
+.ti-table td:not(:first-child),
+.ti-table th:not(:first-child) {
+    padding-left: var(--pk-spacing-2, 0.5rem);
+}
+
+.ti-thead {
+    background: var(--gray-050, var(--pk-color-gray-050, #f3f7fc));
+    border-bottom: 1px solid var(--pk-color-border, rgba(96, 125, 159, 0.25));
+}
+
+.ti-thead-cell {
+    color: var(--pk-color-gray-500, #596673);
+    font-weight: 500;
+    line-height: 1.25rem;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+}
+
+.ti-thead-cell-wrap {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    gap: var(--pk-spacing-1, 0.25rem);
+    padding: 0;
+    background: none;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.ti-thead-cell-wrap > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ti-sort-icon {
+    flex: 0 0 auto;
+    margin-left: auto;
+    transform: rotate(180deg);
+    opacity: 0.75;
+}
+
+.ti-sort-icon.reverse {
+    transform: rotate(0deg);
+}
+
+.ti-tbody-updates-row td {
+    padding: 0 !important;
+}
+
+.ti-updates-banner-btn {
+    width: 100%;
+    padding: 0.75em;
+    border: 0;
+    cursor: pointer;
+    background-color: var(--pk-color-gray-050, #f3f7fc);
+    background-image:
+        linear-gradient(to right, var(--pk-color-gray-100, #e4ecf6) 1px, transparent 0),
+        linear-gradient(to bottom, var(--pk-color-gray-100, #e4ecf6) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+    box-shadow: inset 0 0 3px -1px color-mix(in srgb, var(--pk-color-gray-400, #8f9bab) 55%, transparent);
+    transition: background-color 0.1s ease;
+}
+
+.ti-updates-banner-btn:hover {
+    background-color: var(--pk-color-gray-100, #e4ecf6);
+}
+
+.ti-tbody-row {
+    background: var(--pk-color-bg, #fff);
+    cursor: pointer;
+}
+
+.ti-log-level-info .ti-tbody-row:hover,
+.ti-log-level-debug .ti-tbody-row:hover,
+.ti-log-level-info.is-active .ti-tbody-row,
+.ti-log-level-debug.is-active .ti-tbody-row {
+    background: color-mix(in srgb, var(--pk-color-sky-500, #0d78f2) 8%, white);
+}
+
+.ti-log-level-warning .ti-tbody-row:hover,
+.ti-log-level-warning.is-active .ti-tbody-row {
+    background: color-mix(in srgb, var(--pk-color-amber-500, #f59e0b) 12%, white);
+}
+
+.ti-log-level-error .ti-tbody-row:hover,
+.ti-log-level-error.is-active .ti-tbody-row {
+    background: color-mix(in srgb, var(--pk-color-red-500, #e5422b) 12%, white);
+}
+
+.ti-tbody-cell {
+    border-bottom: 1px solid var(--pk-color-border-subtle, #e1e1e4);
+}
+
+.ti-table tbody:last-child .ti-tbody-cell {
+    border-bottom: 0;
+}
+
+/* Level + Time: fixed rem tracks (table-layout:fixed ignores content width). */
+.ti-table col.col-level {
+    width: 7.5rem;
+}
+
+.ti-table col.col-datetime {
+    width: 11rem;
+}
+
+.ti-table col.col-category {
+    width: 24%;
+}
+
+.ti-tbody-cell.col-level,
+.ti-tbody-cell.col-datetime {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Category + Message: absorb remaining width and ellipsis. */
+.ti-tbody-cell.col-category {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ti-tbody-cell.col-message {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    max-width: 1px;
+}
+
+.ti-category-cell {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.7rem;
+    font-family: var(--pk-font-family-mono, SFMono-Regular, Consolas, Menlo, monospace);
+}
+
+.ti-level-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--pk-spacing-1, 0.25rem);
+    white-space: nowrap;
+}
+
+.ti-level-cell > pk-icon {
+    flex: 0 0 auto;
+}
+
+.ti-log-level-info .ti-level-cell,
+.ti-log-level-debug .ti-level-cell {
+    color: var(--pk-color-sky-600, #0b69cb);
+}
+
+.ti-log-level-warning .ti-level-cell {
+    color: var(--pk-color-amber-600, #b45309);
+}
+
+.ti-log-level-error .ti-level-cell {
+    color: var(--pk-color-red-600, #c51f3d);
+}
+
+.ti-tbody-detail-row {
+    font-size: 0.7rem;
+    font-family: var(--pk-font-family-mono, SFMono-Regular, Consolas, Menlo, monospace);
+}
+
+.ti-tbody-detail-row td {
+    border-bottom: 1px solid var(--pk-color-border-subtle, #e1e1e4);
+    padding-left: var(--pk-spacing-4, 1rem);
+    padding-right: var(--pk-spacing-4, 1rem);
+}
+
+.ti-tbody-detail-row .log-detail {
+    padding: var(--pk-spacing-2, 0.5rem) 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+}
+
+.ti-table-wrap mark {
+    background-color: var(--pk-color-amber-200, #fde68a);
+    border-radius: var(--pk-radius-sm, 0.25rem);
+    color: var(--pk-color-gray-900, #18181b);
+    padding: 0.125rem 0.25rem;
+}
+
+.ti-pagination {
+    background-color: var(--gray-050, var(--pk-color-gray-050, #f3f7fc));
+    border-radius: 0 0 var(--large-border-radius, 0.375rem) var(--large-border-radius, 0.375rem);
+    box-sizing: border-box;
+    min-height: 50px;
+    padding: var(--s, 0.5rem) var(--xl, 1.5rem);
+    border-top: 1px solid var(--pk-color-border, rgba(96, 125, 159, 0.25));
+}
+
+/* Tablet/mobile: keep all columns (no display:none — that misaligns colgroup vs cells
+   and breaks expand rows). Scroll horizontally instead. */
+@media (max-width: 1023px) {
+    .ti-file-label {
+        display: none;
+    }
+
+    .ti-table {
+        min-width: 40rem;
+    }
+
+    .ti-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 767px) {
+    /* Craft's mobile #content padding is 8px (not --xl). Bleed that away so the
+       panel sits flush in the content pane; keep Craft's outer #main-content gutter. */
+    .timber-utility-app {
+        margin: -8px;
+    }
+
+    .ti-pagination {
+        padding-inline: var(--pk-spacing-4, 1rem);
+    }
+
+    /* Full-width combobox row — dropdown width follows trigger, stays in viewport. */
+    .ti-file {
+        flex-wrap: wrap;
+        row-gap: var(--pk-spacing-2, 0.5rem);
+    }
+
+    .ti-file-wrap {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    /* File picker: filename is the only thing that matters on a narrow screen. */
+    .ti-file-combobox > .ti-file-size {
+        display: none;
+    }
+
+    .ti-file-combobox pk-option .ti-file-menu-meta {
+        display: none;
+    }
+
+    /* Drop the muted `@storage/logs/` prefix — show just the filename. */
+    .ti-file-combobox pk-option .ti-file-name span {
+        display: none;
+    }
+}

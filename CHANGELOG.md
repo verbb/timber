@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Rebuild the Logs utility UI on [Plugin Kit](https://docs.verbb.io/plugin-kit/web/) (web components). Existing log viewing, filtering, search, pagination, download/delete, and real-time updates are preserved.
+- The log file picker is now a searchable combobox.
+- Improve accessibility, arrow-key, typeahead, and Enter/Space navigation.
+- Improve responsive handling for the Logs utility.
+
 ## 2.0.4 - 2025-11-06
 
 ### Fixed

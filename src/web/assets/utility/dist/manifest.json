@@ -1,14 +1,30 @@
 {
-  "utility/src/js/timber.css": {
-    "file": "assets/timber-9914295f.css",
-    "src": "utility/src/js/timber.css"
+  "_timberPkComponents-DHeaPFCk.js": {
+    "file": "assets/timberPkComponents-DHeaPFCk.js",
+    "name": "timberPkComponents"
   },
-  "utility/src/js/timber.js": {
-    "file": "assets/timber-fbf13f97.js",
-    "src": "utility/src/js/timber.js",
+  "utility/src/js/plugin-kit-register.ts": {
+    "file": "assets/pluginKit-BQa60oKN.js",
+    "name": "pluginKit",
+    "src": "utility/src/js/plugin-kit-register.ts",
     "isEntry": true,
+    "imports": [
+      "_timberPkComponents-DHeaPFCk.js"
+    ],
     "css": [
-      "assets/timber-9914295f.css"
+      "assets/pluginKit-DgFpzd02.css"
+    ]
+  },
+  "utility/src/js/timber.ts": {
+    "file": "assets/timber-CRPmcmEl.js",
+    "name": "timber",
+    "src": "utility/src/js/timber.ts",
+    "isEntry": true,
+    "imports": [
+      "_timberPkComponents-DHeaPFCk.js"
+    ],
+    "css": [
+      "assets/timber-DMjCr4Vx.css"
     ]
   }
 }
