@@ -15,5 +15,12 @@
             "feature-tour/logs",
             "feature-tour/real-time-logs"
         ]
+    },
+    {
+        "title": "Developers",
+        "collapsable": false,
+        "children": [
+            "developers/events"
+        ]
     }
 ]

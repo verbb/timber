@@ -4,6 +4,7 @@
 
 ### Added
 - Add per-log-file view permissions, plus optional include/exclude lists, so users can be limited to specific log files ([#3](https://github.com/verbb/timber/issues/3)).
+- Add a `modifyLogFiles` event so modules can add or remove log files from the catalog.
 
 ### Changed
 - Rebuild the Logs utility UI on [Plugin Kit](https://docs.verbb.io/plugin-kit/web/) (web components). Existing log viewing, filtering, search, pagination, download/delete, and real-time updates are preserved.

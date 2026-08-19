@@ -19,6 +19,8 @@ To restrict **which** log files a user group can see, leave **View all log files
 
 You can also limit the catalog for the whole site via `includedLogFiles` / `excludedLogFiles` in `config/timber.php` (or Settings → Timber). Config applies first; user permissions then filter further. Download all / delete all only affect files the user is allowed to see.
 
+Modules can add or remove files from the catalog with the `modifyLogFiles` event. See [Events](/developers/events).
+
 ## Performance
 Some log files can get pretty large. Fortunately, Craft will split log files automatically, but nevertheless Timber still needs to deal with large log files. We employ a few things to keep performance in check:
 
