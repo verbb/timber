@@ -65,6 +65,7 @@ assertSame("not a normal log line at all\n", $parsed['message'], 'Raw fallback m
 
 assertSame(1, preg_match(LogParser::lineStartPattern($defaultLog), $craft5), 'Line start matches Craft 5');
 assertSame(1, preg_match(LogParser::lineStartPattern($defaultLog), $blitz), 'Line start matches bracketed');
+assertSame(0, preg_match(LogParser::lineStartPattern($defaultLog), '[previous exception] [object] (ReflectionException...)'), 'Line start ignores exception chain markers');
 
 $nginxPath = '/var/log/nginx/error.log';
 

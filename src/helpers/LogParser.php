@@ -20,7 +20,7 @@ class LogParser
     public const EVENT_MODIFY_LOG_PARSERS = 'modifyLogParsers';
 
     /** Bump when built-in parser rules change so parsed-log caches invalidate. */
-    public const VERSION = '2';
+    public const VERSION = '3';
 
     private const ENTRY_FIELDS = ['datetime', 'channel', 'level', 'category', 'message', 'context'];
 
@@ -125,8 +125,9 @@ class LogParser
 
     private static function defaultLineStartPattern(): string
     {
-        // ISO-style dates (Craft, Formie, ondemand) or bracketed timestamps (Monolog, Blitz, PHP errors).
-        return '/^(?:\d{4}-\d{2}-\d{2}|\[)/';
+        // Craft/Formie dates, or bracketed timestamps (Monolog ISO, Blitz). Deliberately not bare `[` —
+        // Yii exception chains use `[previous exception]` / `[object]` mid-entry and must stay attached.
+        return '/^(?:\d{4}-\d{2}-\d{2}|\[\d{4}-\d{2}-\d{2})/';
     }
 
     /**
