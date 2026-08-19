@@ -15,6 +15,9 @@
 - Improve accessibility, arrow-key, typeahead, and Enter/Space navigation.
 - Improve responsive handling for the Logs utility.
 
+### Fixed
+- Keep Yii exception-chain lines (`[previous exception]`, stack traces) attached to the parent ERROR entry instead of splitting them into fake rows.
+
 ## 2.0.4 - 2025-11-06
 
 ### Fixed
