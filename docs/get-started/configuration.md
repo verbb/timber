@@ -11,6 +11,8 @@ return [
         'paginationLimit' => 100,
         'enableRealTimeUpdates' => false,
         'socketPort' => 8085,
+        'includedLogFiles' => [],
+        'excludedLogFiles' => [],
     ]
 ];
 ```
@@ -19,6 +21,8 @@ return [
 - `paginationLimit` - Set the number of entries to show per-page for pagination.
 - `enableRealTimeUpdates` - Whether to enable real-time updates for logs.
 - `socketPort` - Set the port number for the WebSocket listener, if enabling real-time logging.
+- `includedLogFiles` - Optional allowlist of log file stems. Empty means all files. Use the name without a date suffix (`web` matches `web-2026-08-19.log`).
+- `excludedLogFiles` - Optional denylist of log file stems, applied after the allowlist. Hidden from everyone, including admins.
 
 ## Control Panel
 You can also manage configuration settings through the Control Panel by visiting Settings → Timber.

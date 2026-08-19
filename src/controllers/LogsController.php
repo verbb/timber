@@ -2,6 +2,7 @@
 namespace verbb\timber\controllers;
 
 use verbb\timber\Timber;
+use verbb\timber\helpers\LogFiles;
 
 use Craft;
 use craft\helpers\App;
@@ -34,9 +35,11 @@ class LogsController extends Controller
         $levels = $this->request->getParam('levels');
         $categories = $this->request->getParam('categories');
 
-        if (!str_ends_with($logFile, '.log')) {
+        if (!LogFiles::isAccessibleLogPath($logFile)) {
             return $this->asFailure(Craft::t('timber', 'Invalid file.'));
         }
+
+        LogFiles::requireView($logFile);
 
         $supportsLevel = true;
         $supportsCategory = true;
@@ -124,7 +127,7 @@ class LogsController extends Controller
 
         $logFile = $this->request->getRequiredParam('file');
 
-        if (!$logFile) {
+        if (!LogFiles::isAccessibleLogPath($logFile)) {
             throw new BadRequestHttpException(Craft::t('timber', 'The log file you’re trying to download does not exist.'));
         }
 
@@ -133,6 +136,8 @@ class LogsController extends Controller
         if (!$currentUser || !$currentUser->can('timber-download')) {
             throw new ForbiddenHttpException(Craft::t('timber', 'User not authorized to download log.'));
         }
+
+        LogFiles::requireView($logFile, $currentUser);
 
         $file = @fopen($logFile, 'rb');
 
@@ -162,14 +167,15 @@ class LogsController extends Controller
 
         App::maxPowerCaptain();
 
-        $logFiles = FileHelper::findFiles(Craft::getAlias('@storage/logs'), [
-            'only' => ['*.log'],
-        ]);
+        foreach (LogFiles::visible($currentUser) as $file) {
+            $handle = @fopen($file['path'], 'rb');
 
-        foreach ($logFiles as $logFile) {
-            $file = @fopen($logFile, 'rb');
+            if ($handle === false) {
+                continue;
+            }
 
-            $zip->addFromString(basename($logFile), stream_get_contents($file));
+            $zip->addFromString(basename($file['path']), stream_get_contents($handle));
+            fclose($handle);
         }
 
         $zip->close();
@@ -184,7 +190,7 @@ class LogsController extends Controller
 
         $logFile = $this->request->getRequiredParam('file');
 
-        if (!$logFile) {
+        if (!LogFiles::isAccessibleLogPath($logFile)) {
             throw new BadRequestHttpException(Craft::t('timber', 'The log file you’re trying to delete does not exist.'));
         }
 
@@ -193,6 +199,8 @@ class LogsController extends Controller
         if (!$currentUser || !$currentUser->can('timber-delete')) {
             throw new ForbiddenHttpException(Craft::t('timber', 'User not authorized to delete log.'));
         }
+
+        LogFiles::requireView($logFile, $currentUser);
 
         if (file_exists($logFile)) {
             FileHelper::unlink($logFile);
@@ -212,15 +220,11 @@ class LogsController extends Controller
             throw new ForbiddenHttpException(Craft::t('timber', 'User not authorized to delete log.'));
         }
 
-        $logs = Craft::getAlias('@storage/logs');
-
-        FileHelper::clearDirectory($logs, [
-            'except' => [
-                // Allow some hidden files
-                '.gitignore',
-                '.gitkeep',
-            ],
-        ]);
+        foreach (LogFiles::visible($currentUser) as $file) {
+            if (file_exists($file['path'])) {
+                FileHelper::unlink($file['path']);
+            }
+        }
 
         return $this->asJson(['success' => true]);
     }

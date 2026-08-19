@@ -15,6 +15,10 @@ Log entries are also paginated for performance.
 ## Permissions
 Timber provides User permissions for certain features. You can enable access to view logs by allowing access to the Utility itself. You can also control who can download or delete log files with separate permissions.
 
+To restrict **which** log files a user group can see, leave **View all log files** unchecked and enable the nested permissions for specific files (`web`, `queue`, `phperrors`, and any plugin logs currently on disk). Dated files like `web-2026-08-19.log` are grouped under `web`. Users with **View all log files** continue to see new log files as they appear.
+
+You can also limit the catalog for the whole site via `includedLogFiles` / `excludedLogFiles` in `config/timber.php` (or Settings → Timber). Config applies first; user permissions then filter further. Download all / delete all only affect files the user is allowed to see.
+
 ## Performance
 Some log files can get pretty large. Fortunately, Craft will split log files automatically, but nevertheless Timber still needs to deal with large log files. We employ a few things to keep performance in check:
 

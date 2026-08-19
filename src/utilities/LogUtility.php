@@ -2,12 +2,12 @@
 namespace verbb\timber\utilities;
 
 use verbb\timber\Timber;
+use verbb\timber\helpers\LogFiles;
 use verbb\timber\helpers\Plugin;
 use verbb\timber\models\Settings;
 
 use Craft;
 use craft\base\Utility;
-use craft\helpers\FileHelper;
 use craft\helpers\Json;
 
 class LogUtility extends Utility
@@ -40,18 +40,7 @@ class LogUtility extends Utility
         // `[data-timber-auto-mount]` on load (no vite-script-loaded handshake needed).
         Plugin::registerUtilityAssets();
 
-        $logFiles = FileHelper::findFiles(Craft::getAlias('@storage/logs'), [
-            'only' => ['*.log'],
-        ]);
-
-        sort($logFiles);
-
-        foreach ($logFiles as $key => $logFile) {
-            $logFiles[$key] = [
-                'path' => $logFile,
-                'size' => filesize($logFile),
-            ];
-        }
+        $logFiles = LogFiles::visible();
 
         $currentUser = Craft::$app->getUser()->getIdentity();
 

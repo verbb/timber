@@ -2,6 +2,7 @@
 namespace verbb\timber;
 
 use verbb\timber\base\PluginTrait;
+use verbb\timber\helpers\LogFiles;
 use verbb\timber\models\Settings;
 use verbb\timber\utilities\LogUtility;
 
@@ -87,9 +88,22 @@ class Timber extends Plugin
     private function _registerPermissions(): void
     {
         Event::on(UserPermissions::class, UserPermissions::EVENT_REGISTER_PERMISSIONS, function(RegisterUserPermissionsEvent $event) {
+            $nested = [];
+
+            foreach (LogFiles::discoverStems() as $stem) {
+                $nested['timber-viewLogs:' . $stem] = [
+                    'label' => Craft::t('timber', 'View “{file}” logs', ['file' => $stem]),
+                ];
+            }
+
             $event->permissions[] = [
                 'heading' => Craft::t('timber', 'Timber'),
                 'permissions' => [
+                    'timber-viewLogs' => [
+                        'label' => Craft::t('timber', 'View all log files'),
+                        'info' => Craft::t('timber', 'Includes log files created later. Leave this unchecked and enable specific files below to restrict a user group.'),
+                        'nested' => $nested,
+                    ],
                     'timber-download' => ['label' => Craft::t('timber', 'Download logs')],
                     'timber-delete' => ['label' => Craft::t('timber', 'Delete logs')],
                 ],

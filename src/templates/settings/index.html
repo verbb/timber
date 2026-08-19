@@ -23,6 +23,45 @@
     warning: macros.configWarning('paginationLimit', 'timber'),
 }) }}
 
+{{ forms.editableTableField({
+    label: 'Included Log Files' | t('timber'),
+    instructions: 'Limit Timber to these log files. Leave empty to include all. Use the name without a date suffix — `web` matches `web-2026-08-19.log`.' | t('timber'),
+    id: 'includedLogFiles',
+    name: 'includedLogFiles',
+    cols: {
+        stem: {
+            type: 'singleline',
+            heading: 'Log file' | t('timber'),
+            info: 'e.g. web, queue, phperrors, mycustomlogfile' | t('timber'),
+        },
+    },
+    rows: settings.includedLogFileRows,
+    addRowLabel: 'Add a log file' | t('timber'),
+    allowAdd: true,
+    allowDelete: true,
+    allowReorder: true,
+    warning: macros.configWarning('includedLogFiles', 'timber'),
+}) }}
+
+{{ forms.editableTableField({
+    label: 'Excluded Log Files' | t('timber'),
+    instructions: 'Hide these log files from everyone, including admins. Applied after the include list.' | t('timber'),
+    id: 'excludedLogFiles',
+    name: 'excludedLogFiles',
+    cols: {
+        stem: {
+            type: 'singleline',
+            heading: 'Log file' | t('timber'),
+        },
+    },
+    rows: settings.excludedLogFileRows,
+    addRowLabel: 'Add a log file' | t('timber'),
+    allowAdd: true,
+    allowDelete: true,
+    allowReorder: true,
+    warning: macros.configWarning('excludedLogFiles', 'timber'),
+}) }}
+
 {{ forms.lightswitchField({
     label: 'Enable Real-time Updates' | t('timber'),
     instructions: 'Whether to enable real-time updates for logs.' | t('timber'),
