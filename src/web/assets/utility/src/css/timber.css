@@ -150,7 +150,6 @@
 }
 
 .ti-button-refresh {
-    --pk-btn-icon-size: 1.25rem;
     --pk-color-gray-700: var(--pk-color-gray-600);
 }
 

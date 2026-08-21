@@ -172,7 +172,7 @@ export class TimberUtility {
 
         // `icon` on pk-button is a boolean density flag — glyphs go in slot="start".
         const refresh = this.createIconButton({
-            icon: 'timber-refresh',
+            icon: 'arrows-rotate',
             label: Craft.t('timber', 'Refresh'),
             className: 'ti-button-refresh',
             compact: false,
@@ -224,7 +224,7 @@ export class TimberUtility {
 
         const searchIcon = document.createElement('pk-icon');
         searchIcon.slot = 'start';
-        searchIcon.setAttribute('icon', 'search');
+        searchIcon.setAttribute('icon', 'magnifying-glass');
 
         const searchClearIcon = document.createElement('pk-icon');
         searchClearIcon.slot = 'clear-icon';

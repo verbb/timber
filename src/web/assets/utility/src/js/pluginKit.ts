@@ -16,23 +16,7 @@ import { PkSpinner } from '@verbb/plugin-kit-web/components/spinner/pk-spinner.j
 
 // Opt-in glyphs for `<pk-icon icon="…">`.
 import {
-    check,
-    chevronDown,
-    circle,
-    download,
-    ellipsis,
-    gear,
-    registerIcons,
-    search,
-    trash,
-    triangleExclamation,
-    xmark,
-} from '@verbb/plugin-kit-icons';
-
-import { circleInfo, timberRefresh } from './icons.js';
-import { TIMBER_PK_COMPONENTS } from './timberPkComponents.js';
-
-registerIcons({
+    arrowsRotate,
     check,
     chevronDown,
     circle,
@@ -40,10 +24,27 @@ registerIcons({
     download,
     ellipsis,
     gear,
-    search,
+    magnifyingGlass,
+    registerIcons,
     trash,
     triangleExclamation,
-    timberRefresh,
+    xmark,
+} from '@verbb/plugin-kit-icons';
+
+import { TIMBER_PK_COMPONENTS } from './timberPkComponents.js';
+
+registerIcons({
+    arrowsRotate,
+    check,
+    chevronDown,
+    circle,
+    circleInfo,
+    download,
+    ellipsis,
+    gear,
+    magnifyingGlass,
+    trash,
+    triangleExclamation,
     xmark,
 });
 
