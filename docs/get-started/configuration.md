@@ -19,9 +19,9 @@ return [
 
 ## Configuration options
 - `paginationLimit` - Set the number of entries to show per-page for pagination.
-- `enableRealTimeUpdates` - Whether to enable real-time updates for logs.
-- `socketPort` - Set the port number for the WebSocket listener, if enabling real-time logging.
-- `includedLogFiles` - Optional allowlist of log file stems. Empty means all files. Use the name without a date suffix (`web` matches `web-2026-08-19.log`).
+- `enableRealTimeUpdates` - Whether the Logs utility should open a WebSocket for live updates. Also requires the watch + socket CLI processes (see [Real-Time Logs](docs:feature-tour/real-time-logs)).
+- `socketPort` - Port for the WebSocket listener. The browser always connects to `localhost` on this port.
+- `includedLogFiles` - Optional allowlist of log file stems. Empty / unset means all discoverable files. Use the name without a date suffix (`web` matches `web-2026-08-19.log`).
 - `excludedLogFiles` - Optional denylist of log file stems, applied after the allowlist. Hidden from everyone, including admins.
 
 ## Control Panel

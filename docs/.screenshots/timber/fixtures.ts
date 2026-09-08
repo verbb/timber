@@ -7,6 +7,7 @@ import type { ScreenshotSetupContext } from '@verbb/docs-screenshots/types';
 export type TimberDocsFixture = {
     utilityRoute: string;
     logFile: string;
+    logPath: string;
 };
 
 const fixtureDir = dirname(fileURLToPath(import.meta.url));

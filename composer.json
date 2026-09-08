@@ -1,6 +1,6 @@
 {
     "name": "verbb/timber",
-    "description": "A utility to show your application logs in the control panel.",
+    "description": "View Craft application logs in the control panel \u2014 filter, search, and stream in real time.",
     "type": "craft-plugin",
     "version": "2.1.0",
     "keywords": [

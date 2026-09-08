@@ -1,9 +1,10 @@
 import { defineScreenshotScenario } from '@verbb/docs-screenshots/api';
 import { seedTimberDocsFixture } from '../.screenshots/timber/fixtures';
-import { createTimberCleanupStep } from '../.screenshots/timber/presets';
+import {
+    createTimberCleanupStep,
+    createTimberLogsSquareCropStep,
+} from '../.screenshots/timber/presets';
 
-// Starter scenario — seeds sample log files and captures the Timber Logs utility. Retarget
-// the selector at the virtualised log table once the Phase 1 UI is built out.
 let utilityRoute = '/admin/utilities/timber-logs';
 
 export default defineScreenshotScenario({
@@ -11,7 +12,7 @@ export default defineScreenshotScenario({
     output: '_screenshots/feature-tour/logs.png',
     route: () => utilityRoute,
     viewport: {
-        width: 1320,
+        width: 920,
         height: 820,
         deviceScaleFactor: 2,
     },
@@ -20,17 +21,56 @@ export default defineScreenshotScenario({
         utilityRoute = fixture.utilityRoute;
     },
     waitFor: [
-        { type: 'selector', selector: '#content', state: 'visible' },
+        { type: 'selector', selector: '#timber-docs-screenshot-stage', state: 'visible', timeout: 30000 },
     ],
     preSteps: [
         createTimberCleanupStep(),
+        // Combobox does not auto-select — pick seeded web.log then wait for rows.
+        {
+            type: 'evaluate',
+            expression: `
+                (() => {
+                    const combo = document.querySelector('pk-combobox.ti-file-combobox');
+                    if (!(combo instanceof HTMLElement)) {
+                        throw new Error('Timber file combobox not found.');
+                    }
+
+                    const options = Array.from(combo.querySelectorAll('pk-option'));
+                    const match = options.find((el) => {
+                        const value = el.value || el.getAttribute('value') || '';
+                        return /web\\.log$/.test(value);
+                    });
+
+                    if (!(match instanceof HTMLElement)) {
+                        const available = options.map((el) => el.value || el.getAttribute('value') || '').join(', ');
+                        throw new Error('Seeded web.log option not found. Available: ' + available);
+                    }
+
+                    const value = match.value || match.getAttribute('value') || '';
+                    combo.value = value;
+                    combo.dispatchEvent(new CustomEvent('pk-change', { detail: { value }, bubbles: true }));
+                    combo.dispatchEvent(new CustomEvent('pk-after-hide', { bubbles: true }));
+                })();
+            `,
+        },
+        {
+            type: 'wait',
+            waitFor: {
+                type: 'selector',
+                selector: 'table.ti-table tbody.ti-tbody .ti-tbody-row',
+                state: 'visible',
+                timeout: 30000,
+            },
+        },
+        createTimberLogsSquareCropStep({ maxWidth: 920 }),
+        { type: 'wait', waitFor: { type: 'timeout', ms: 200 } },
     ],
     steps: [],
     target: {
         type: 'selector',
-        selector: '#content',
-        padding: 20,
+        selector: '#timber-docs-screenshot-stage',
+        padding: 0,
     },
-    caption: 'The Timber Logs utility.',
-    intent: 'Show the log viewer utility with filterable, virtualised log rows.',
+    caption: 'Timber Logs utility with level filters and paginated entries.',
+    intent: 'Show the log viewer utility with filterable, paginated log rows.',
 });
