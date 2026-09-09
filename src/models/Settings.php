@@ -65,7 +65,9 @@ class Settings extends Model
     {
         $rules = parent::defineRules();
 
-        $rules[] = [['paginationLimit', 'socketPort', 'maxPaginationLimit', 'maxLogReadBytes'], 'integer', 'min' => 0];
+        $rules[] = [['paginationLimit', 'socketPort'], 'required'];
+        $rules[] = [['paginationLimit', 'socketPort'], 'integer', 'min' => 1];
+        $rules[] = [['maxPaginationLimit', 'maxLogReadBytes'], 'integer', 'min' => 0];
 
         return $rules;
     }

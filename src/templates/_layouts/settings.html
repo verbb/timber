@@ -1,26 +1,27 @@
-{% extends 'timber/_layouts' %}
+{% extends 'verbb-base/_layouts/settings' %}
 
 {% import '_includes/forms' as forms %}
 {% import 'verbb-base/_macros' as macros %}
 
 {% requireAdmin %}
 
-{% set crumbs = [
-    { label: 'Timber' | t('timber'), url: url('timber') },
-    { label: 'Settings' | t('app'), url: url('timber/settings') },
-] %}
+{% do view.registerAssetBundle('verbb\\timber\\web\\assets\\cp\\TimberCpAsset') -%}
 
-{% set navItems = {
-    general: { label: 'General Settings' | t('timber'), url: url('timber/settings') },
+{% set crumbs = [
+    { label: 'Settings' | t('app'), url: url('settings') },
+    { label: 'Plugins' | t('app'), url: url('settings/plugins') },
+    { label: 'Timber' | t('timber'), url: url('timber/settings') },
+] | merge(crumbs ?? []) %}
+
+{% set pageTabs = {
+    general: { title: 'General Settings' | t('timber'), url: url('timber/settings') },
 } %}
 
-{% set title = 'Settings' | t('timber') %}
-{% set docTitle = navItems[selectedNavItem].label ~ ' - ' ~ title %}
+{% set pageTitle = pageTitle ?? false %}
+{% if title is not defined and pageTitle %}
+    {% set title = pageTitle %}
+{% endif %}
 
-{% block sidebar %}
-    {% include '_includes/nav' with {
-        label: title,
-        items: navItems,
-        selectedItem: selectedNavItem,
-    } only %}
+{% block settingsMeta %}
+    {{ hiddenInput('pluginHandle', 'timber') }}
 {% endblock %}
