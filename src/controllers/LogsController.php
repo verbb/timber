@@ -26,6 +26,7 @@ class LogsController extends Controller
     {
         $this->requireCpRequest();
         $this->requirePostRequest();
+        $this->requirePermission('utility:timber-logs');
 
         $logFile = $this->request->getRequiredParam('file');
         $orderBy = $this->request->getParam('orderBy');
@@ -40,6 +41,14 @@ class LogsController extends Controller
         }
 
         LogFiles::requireView($logFile);
+
+        /* @var \verbb\timber\models\Settings $settings */
+        $settings = Timber::$plugin->getSettings();
+        $maxPage = $settings->getMaxPageSize();
+        $defaultLimit = max(1, min((int)$settings->paginationLimit ?: 100, $maxPage));
+        $limit = (int)($limit ?? $defaultLimit);
+        $limit = max(1, min($limit, $maxPage));
+        $page = max(0, (int)$page);
 
         $supportsLevel = true;
         $supportsCategory = true;
@@ -124,6 +133,7 @@ class LogsController extends Controller
     {
         $this->requireCpRequest();
         $this->requirePostRequest();
+        $this->requirePermission('utility:timber-logs');
 
         $logFile = $this->request->getRequiredParam('file');
 
@@ -151,6 +161,7 @@ class LogsController extends Controller
     {
         $this->requireCpRequest();
         $this->requirePostRequest();
+        $this->requirePermission('utility:timber-logs');
 
         $currentUser = static::currentUser();
 
@@ -187,6 +198,7 @@ class LogsController extends Controller
     {
         $this->requireCpRequest();
         $this->requirePostRequest();
+        $this->requirePermission('utility:timber-logs');
 
         $logFile = $this->request->getRequiredParam('file');
 
@@ -213,6 +225,7 @@ class LogsController extends Controller
     {
         $this->requireCpRequest();
         $this->requirePostRequest();
+        $this->requirePermission('utility:timber-logs');
 
         $currentUser = static::currentUser();
 

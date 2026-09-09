@@ -57,5 +57,6 @@ export interface LogTableProps {
     pageInfo: TimberPageInfo;
     supportsLevel: boolean;
     supportsCategory: boolean;
-    updatedLogs: TimberLogEntry[];
+    /** Count of pending realtime invalidations (not buffered log bodies). */
+    pendingUpdates: number;
 }

@@ -55,7 +55,10 @@ export class TimberUtility {
     private search = '';
     private levels: string[] = [];
     private categories: string[] = [];
-    private updatedLogs: TimberLogEntry[] = [];
+    /** Realtime invalidation count for the current file (bodies arrive via HTTP). */
+    private pendingUpdates = 0;
+    /** Bumped on every fetch so out-of-order responses cannot overwrite newer UI state. */
+    private fetchGeneration = 0;
 
     private proxyLogFiles: TimberLogFile[] = [];
     private logs: TimberLogEntry[] = [];
@@ -777,7 +780,7 @@ export class TimberUtility {
             pageInfo: this.pageInfo,
             supportsLevel: this.supportsLevel,
             supportsCategory: this.supportsCategory,
-            updatedLogs: this.updatedLogs,
+            pendingUpdates: this.pendingUpdates,
         });
     }
 
@@ -789,6 +792,8 @@ export class TimberUtility {
         this.logs = [];
         this.logFile = file;
         this.initFilters = false;
+        this.pendingUpdates = 0;
+        this.fetchGeneration += 1;
         this.syncFileTrigger();
         this.rebuildFileOptions();
         void this.fetchLog();
@@ -805,11 +810,10 @@ export class TimberUtility {
     }
 
     private fetchNewLogs(): void {
-        // Prepend socket buffer and reset sort — same as BEFORE (no refetch).
+        // Socket only signals that the file changed — reload through authorized HTTP.
+        this.pendingUpdates = 0;
         this.orderBy = 'datetime desc';
-        this.logs = this.updatedLogs.concat(this.logs);
-        this.updatedLogs = [];
-        this.syncLogTable();
+        void this.fetchLog();
     }
 
     private async deleteLog(file: string): Promise<void> {
@@ -918,9 +922,10 @@ export class TimberUtility {
             reconnectionAttempts: 3,
         }) as SocketLike;
 
+        // Invalidation only — never trust socket payloads for log content (SEC-04).
         this.socket.on('logUpdate', (data) => {
-            if (data.file === this.logFile && Array.isArray(data.data)) {
-                this.updatedLogs = this.updatedLogs.concat(data.data);
+            if (data.file === this.logFile) {
+                this.pendingUpdates += 1;
                 this.syncLogTable();
             }
         });
@@ -959,8 +964,15 @@ export class TimberUtility {
             categories,
         };
 
+        const generation = ++this.fetchGeneration;
+
         try {
             const response = await Craft.sendActionRequest('POST', 'timber/logs', { data });
+
+            // Drop stale responses after file/filter/page churn.
+            if (generation !== this.fetchGeneration) {
+                return;
+            }
 
             if (!response.data.logs) {
                 throw new Error(response.data);
@@ -983,6 +995,10 @@ export class TimberUtility {
             this.scheduleFilterMenuRebuild('levels');
             this.scheduleFilterMenuRebuild('categories');
         } catch (error) {
+            if (generation !== this.fetchGeneration) {
+                return;
+            }
+
             this.error = true;
             this.errorMessage = String(error);
 
@@ -996,8 +1012,10 @@ export class TimberUtility {
                 this.errorMessage += `<br><br><small>${errorDetail}</small><br><small>${file1}:${line1}</small><br><small>${file2}:${line2}</small>`;
             }
         } finally {
-            this.loading = false;
-            this.renderBody();
+            if (generation === this.fetchGeneration) {
+                this.loading = false;
+                this.renderBody();
+            }
         }
     }
 }

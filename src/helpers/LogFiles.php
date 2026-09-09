@@ -129,6 +129,11 @@ class LogFiles
                 continue;
             }
 
+            // Respect plugin include/exclude stems (same policy as the CP utility).
+            if (!self::passesConfig($file['stem'])) {
+                continue;
+            }
+
             $paths[] = $file['path'];
         }
 
@@ -193,27 +198,13 @@ class LogFiles
 
         // Admins and the parent “view all” permission skip per-stem checks (including
         // stems that appear later). Nested `timber-viewLogs:{stem}` only apply when the
-        // parent is not granted. Users with neither keep today’s behaviour: all files
-        // that pass config.
+        // parent is not granted. Users with neither parent nor a matching nested grant
+        // are denied — do not fail open to every config-visible file.
         if ($user->admin || $user->can('timber-viewLogs')) {
             return true;
         }
 
-        $hasNestedRestriction = false;
-
-        foreach (self::discoverStems() as $discoveredStem) {
-            if (!$user->can('timber-viewLogs:' . $discoveredStem)) {
-                continue;
-            }
-
-            $hasNestedRestriction = true;
-
-            if ($discoveredStem === $stem) {
-                return true;
-            }
-        }
-
-        return !$hasNestedRestriction;
+        return $user->can('timber-viewLogs:' . $stem);
     }
 
     public static function requireView(string $path, ?User $user = null): void

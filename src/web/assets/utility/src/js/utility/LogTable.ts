@@ -24,7 +24,7 @@ export class LogTable {
         pageInfo: {},
         supportsLevel: true,
         supportsCategory: true,
-        updatedLogs: [],
+        pendingUpdates: 0,
     };
 
     /** Expand map keyed by getLogId — sparse object like BEFORE `toggledLogs`. */
@@ -175,10 +175,10 @@ export class LogTable {
     }
 
     private renderUpdatesBanner(): void {
-        const { updatedLogs } = this.props;
+        const { pendingUpdates } = this.props;
         this.updatesBody.replaceChildren();
 
-        if (!updatedLogs.length) {
+        if (!pendingUpdates) {
             this.updatesBody.hidden = true;
             return;
         }
@@ -193,7 +193,7 @@ export class LogTable {
         button.type = 'button';
         button.className = 'ti-updates-banner-btn';
         button.textContent = Craft.t('timber', '{num} new logs available, click to load', {
-            num: updatedLogs.length,
+            num: pendingUpdates,
         });
         button.addEventListener('click', (event) => {
             event.preventDefault();

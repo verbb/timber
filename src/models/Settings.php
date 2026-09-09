@@ -9,6 +9,13 @@ class Settings extends Model
     // =========================================================================
 
     public int $paginationLimit = 100;
+    /** Absolute ceiling for a single page request (PERF-01). */
+    public int $maxPaginationLimit = 500;
+    /**
+     * Max uncompressed bytes to parse from a log file. Larger files use a tail window
+     * so memory tracks this budget, not full disk size (PERF-01).
+     */
+    public int $maxLogReadBytes = 52428800;
     public int $socketPort = 8085;
     public bool $enableRealTimeUpdates = false;
     public mixed $includedLogFiles = null;
@@ -38,6 +45,18 @@ class Settings extends Model
         return self::stemRows($this->excludedStems());
     }
 
+    /** Effective page size ceiling for HTTP requests. */
+    public function getMaxPageSize(): int
+    {
+        return max(1, min($this->maxPaginationLimit, 2000));
+    }
+
+    /** Bytes budget for a single parse of one log file. */
+    public function getMaxLogReadBytes(): int
+    {
+        return max(1_048_576, $this->maxLogReadBytes);
+    }
+
 
     // Protected Methods
     // =========================================================================
@@ -46,7 +65,7 @@ class Settings extends Model
     {
         $rules = parent::defineRules();
 
-        $rules[] = [['paginationLimit', 'socketPort'], 'integer', 'min' => 0];
+        $rules[] = [['paginationLimit', 'socketPort', 'maxPaginationLimit', 'maxLogReadBytes'], 'integer', 'min' => 0];
 
         return $rules;
     }

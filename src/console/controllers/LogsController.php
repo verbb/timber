@@ -88,11 +88,12 @@ class LogsController extends Controller
                     $this->stdout('[UPDATED]', Console::FG_GREEN);
                     $this->stdout(' → ' . $file . PHP_EOL, Console::FG_GREY);
 
+                    // Invalidate only — never broadcast log bodies. Clients refetch via
+                    // the authorized timber/logs HTTP action (SEC-04).
                     $emitter = new Emitter();
 
                     $emitter->emit('logUpdate', [
                         'file' => $file,
-                        'data' => Timber::$plugin->getService()->getLogsFromString($file, $data),
                     ]);
                 } catch (Throwable $e) {
                     $this->stdout('[ERROR]', Console::FG_RED);
