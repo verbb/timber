@@ -177,6 +177,10 @@ class LogsController extends Controller
         }
 
         $files = LogFiles::visible($currentUser);
+        if ($files === []) {
+            throw new BadRequestHttpException(Craft::t('timber', 'No log files are available to download.'));
+        }
+
         $totalBytes = array_sum(array_column($files, 'size'));
 
         if (count($files) > self::MAX_DOWNLOAD_FILES || $totalBytes > self::MAX_DOWNLOAD_BYTES) {
@@ -193,9 +197,23 @@ class LogsController extends Controller
             }
             $zipOpened = true;
 
+            $archiveNames = [];
+
             foreach ($files as $file) {
+                $basename = basename($file['path']);
+                $name = $basename;
+                $suffix = 2;
+
+                // Recursive and event-added logs can share a basename. ZIP entries must
+                // remain unique, including on case-insensitive extraction filesystems.
+                while (isset($archiveNames[strtolower($name)])) {
+                    $name = $suffix++ . '-' . $basename;
+                }
+
+                $archiveNames[strtolower($name)] = true;
+
                 // Let libzip stream from disk; addFromString() duplicated every log in PHP memory.
-                if (!$zip->addFile($file['path'], basename($file['path']))) {
+                if (!$zip->addFile($file['path'], $name)) {
                     throw new Exception('Cannot add log to zip: ' . basename($file['path']));
                 }
             }
