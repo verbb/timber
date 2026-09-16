@@ -32,6 +32,7 @@
 - Allow log details to be expanded and collapsed with the keyboard, retaining focus after each action.
 - Preserve multiline messages and stack traces when parsing log strings.
 - Preserve directory names in the log picker so files with matching names remain distinguishable.
+- Keep identical and similar log entries independently expandable.
 - Show custom parser context in expanded log details.
 - Separate native PHP error entries and sort their timestamps correctly across month boundaries.
 - Preserve files with matching names from different directories in downloaded log archives.

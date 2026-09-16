@@ -5,10 +5,9 @@
 import {
     formatLevelLabel,
     formatNumber,
-    getLogId,
     markSearchHits,
 } from './format.js';
-import type { LogTableCallbacks, LogTableProps, TimberLogEntry } from './types.js';
+import type { LogTableCallbacks, LogTableProps } from './types.js';
 
 const SORT_COLUMNS = ['level', 'datetime', 'category', 'message'] as const;
 type SortColumn = (typeof SORT_COLUMNS)[number];
@@ -27,8 +26,7 @@ export class LogTable {
         pendingUpdates: 0,
     };
 
-    /** Expand map keyed by getLogId — sparse object like BEFORE `toggledLogs`. */
-    private toggledLogs: Record<string, TimberLogEntry> = {};
+    private toggledLogs = new Set<number>();
 
     private wrap!: HTMLElement;
     private table!: HTMLTableElement;
@@ -44,6 +42,10 @@ export class LogTable {
     }
 
     update(props: Partial<LogTableProps>): void {
+        if (props.logs && props.logs !== this.props.logs) {
+            this.toggledLogs.clear();
+        }
+
         this.props = { ...this.props, ...props };
         this.sync();
     }
@@ -211,7 +213,7 @@ export class LogTable {
 
         for (const [index, log] of logs.entries()) {
             const levelKey = formatLevelLabel(log.level, true);
-            const expanded = Boolean(this.toggledLogs[getLogId(log)]);
+            const expanded = this.toggledLogs.has(index);
             const messageHtml = markSearchHits(log.message || '', searchText);
 
             const group = document.createElement('tbody');
@@ -221,7 +223,7 @@ export class LogTable {
             row.className = 'ti-tbody-row';
             row.addEventListener('click', (event) => {
                 event.preventDefault();
-                this.toggleDetail(log);
+                this.toggleDetail(index);
             });
 
             if (supportsLevel) {
@@ -265,7 +267,7 @@ export class LogTable {
             toggle.innerHTML = messageHtml;
             toggle.addEventListener('click', (event) => {
                 event.stopPropagation();
-                this.toggleDetail(log);
+                this.toggleDetail(index);
                 // Rendering replaces the row; restore focus for repeated Enter/Space use.
                 this.table.querySelectorAll<HTMLButtonElement>('.ti-log-toggle')[index]?.focus();
             });
@@ -377,13 +379,11 @@ export class LogTable {
     // Behaviour
     // -------------------------------------------------------------------------
 
-    private toggleDetail(log: TimberLogEntry): void {
-        const id = getLogId(log);
-
-        if (this.toggledLogs[id]) {
-            delete this.toggledLogs[id];
+    private toggleDetail(index: number): void {
+        if (this.toggledLogs.has(index)) {
+            this.toggledLogs.delete(index);
         } else {
-            this.toggledLogs[id] = log;
+            this.toggledLogs.add(index);
         }
 
         this.renderRows();

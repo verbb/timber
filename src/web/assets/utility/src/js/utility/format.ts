@@ -1,5 +1,3 @@
-import type { TimberLogEntry } from './types.js';
-
 /** Shallow JSON clone — same as BEFORE `utils/object.clone` (filter arrays must not mutate in-flight). */
 export const clone = <T>(value: T): T => {
     if (value === undefined) {
@@ -38,16 +36,6 @@ export const getPrettySize = (bytes: number | null | undefined, decimals = 2): s
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(decimals))} ${sizes[i]}`;
-};
-
-/**
- * Stable expand key — BEFORE: `[datetime, level, channel, category, message.slice(0,200)].join(':')`
- * with newlines stripped.
- */
-export const getLogId = (log: TimberLogEntry): string => {
-    return [log.datetime, log.level, log.channel, log.category, (log.message || '').slice(0, 200)]
-        .join(':')
-        .replace(/(\r\n|\n|\r)/gm, '');
 };
 
 export const formatLevelLabel = (level: string | null | undefined, toLowerCase = false): string => {
