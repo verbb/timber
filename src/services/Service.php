@@ -1,10 +1,11 @@
 <?php
 namespace verbb\timber\services;
 
-use Craft;
-use craft\base\Component;
 use verbb\timber\Timber;
 use verbb\timber\helpers\LogParser;
+
+use Craft;
+use craft\base\Component;
 
 use yii2mod\query\ArrayQuery;
 
@@ -21,7 +22,7 @@ class Service extends Component
             LogParser::VERSION . ':'
             . LogParser::cacheKeySuffix($logFile) . ':'
             . $logFile . ':'
-            . $this->fileGenerationToken($logFile) . ':'
+            . $this->_fileGenerationToken($logFile) . ':'
             . $maxBytes
         );
 
@@ -75,13 +76,16 @@ class Service extends Component
         $lineStart = LogParser::lineStartPattern($logFile);
         $bytesRead = 0;
 
-        while (($line = $readLine()) !== false) {
-            $bytesRead += strlen($line);
+        while ($bytesRead < $maxBytes) {
+            // Pass a hard read length so one malformed, newline-free entry cannot make
+            // fgets()/gzgets() allocate beyond the configured window before we reject it.
+            $line = $readLine(($maxBytes - $bytesRead) + 1);
 
-            // Gzip / streaming path: stop once the budget is exhausted.
-            if ($bytesRead > $maxBytes) {
+            if ($line === false) {
                 break;
             }
+
+            $bytesRead += strlen($line);
 
             if (preg_match($lineStart, $line)) {
                 $key++;
@@ -114,9 +118,6 @@ class Service extends Component
         return $logs;
     }
 
-    /**
-     * @return array{0: (callable(): (string|false))|null, 1: callable(): mixed}
-     */
     protected function openLogFile(string $logFile, int $maxBytes = 0): array
     {
         if (str_ends_with(strtolower($logFile), '.gz')) {
@@ -129,7 +130,7 @@ class Service extends Component
             // Gzip has no cheap tail seek — stream from the start and let readLogFile
             // stop at the byte budget (prefer truncated head over OOM on huge archives).
             return [
-                static fn() => gzgets($handle),
+                static fn(int $length) => gzgets($handle, $length),
                 static fn() => gzclose($handle),
             ];
         }
@@ -151,16 +152,20 @@ class Service extends Component
         }
 
         return [
-            static fn() => fgets($handle),
+            static fn(int $length) => fgets($handle, $length),
             static fn() => fclose($handle),
         ];
     }
+
+
+    // Private Methods
+    // =========================================================================
 
     /**
      * Identity for cache keys when path + size alone are ambiguous (same-size rewrite
      * within the same mtime second). Samples head/tail rather than hashing the whole file.
      */
-    private function fileGenerationToken(string $logFile): string
+    private function _fileGenerationToken(string $logFile): string
     {
         clearstatcache(true, $logFile);
         $size = @filesize($logFile) ?: 0;

@@ -5,7 +5,6 @@
 // filter/realtime behaviour preserved; Plugin Kit wins on chrome.
 
 import { debounce, get } from 'lodash-es';
-import io from 'socket.io-client';
 
 import {
     clone,
@@ -90,6 +89,7 @@ export class TimberUtility {
     private logTable: LogTable | null = null;
 
     private socket: SocketLike | null = null;
+    private destroyed = false;
 
     /** Debounced refetch — 800ms like BEFORE (filter toggles + search). */
     private readonly debouncedFetch = debounce(() => {
@@ -115,6 +115,7 @@ export class TimberUtility {
     }
 
     init(): void {
+        this.destroyed = false;
         this.buildDom();
         this.bindEvents();
         this.syncFileTrigger();
@@ -123,11 +124,12 @@ export class TimberUtility {
         this.renderBody();
 
         if (this.settings.enableRealTimeUpdates) {
-            this.startSocketServer();
+            void this.startSocketServer();
         }
     }
 
     destroy(): void {
+        this.destroyed = true;
         this.debouncedFetch.cancel();
         this.onSearchInput.cancel();
         this.socket?.disconnect?.();
@@ -914,7 +916,14 @@ export class TimberUtility {
         }
     }
 
-    private startSocketServer(): void {
+    private async startSocketServer(): Promise<void> {
+        // Realtime is opt-in; keep Socket.IO out of the normal log viewer path.
+        const { io } = await import('socket.io-client');
+
+        if (this.destroyed || !this.settings.enableRealTimeUpdates) {
+            return;
+        }
+
         this.socket = io(`http://localhost:${this.settings.socketPort}`, {
             reconnection: true,
             reconnectionDelay: 1000,

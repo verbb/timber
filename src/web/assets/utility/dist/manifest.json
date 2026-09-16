@@ -1,27 +1,44 @@
 {
-  "_timberPkComponents-04gl55Zt.js": {
-    "file": "assets/timberPkComponents-04gl55Zt.js",
+  "../../../node_modules/socket.io-client/build/esm/index.js": {
+    "file": "assets/esm-BinGs1Q0.js",
+    "name": "esm",
+    "src": "../../../node_modules/socket.io-client/build/esm/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-DK3Fl9T5.js"
+    ]
+  },
+  "_rolldown-runtime-DK3Fl9T5.js": {
+    "file": "assets/rolldown-runtime-DK3Fl9T5.js",
+    "name": "rolldown-runtime"
+  },
+  "_timberPkComponents-BoxGpGQU.js": {
+    "file": "assets/timberPkComponents-BoxGpGQU.js",
     "name": "timberPkComponents"
   },
   "utility/src/js/plugin-kit-register.ts": {
-    "file": "assets/pluginKit-BBFqx1kY.js",
+    "file": "assets/pluginKit-5YTjD01I.js",
     "name": "pluginKit",
     "src": "utility/src/js/plugin-kit-register.ts",
     "isEntry": true,
     "imports": [
-      "_timberPkComponents-04gl55Zt.js"
+      "_rolldown-runtime-DK3Fl9T5.js",
+      "_timberPkComponents-BoxGpGQU.js"
     ],
     "css": [
-      "assets/pluginKit-CMhC2VHa.css"
+      "assets/pluginKit-BVOgxY4N.css"
     ]
   },
   "utility/src/js/timber.ts": {
-    "file": "assets/timber-B3X5Bwnx.js",
+    "file": "assets/timber-DSMOihmQ.js",
     "name": "timber",
     "src": "utility/src/js/timber.ts",
     "isEntry": true,
     "imports": [
-      "_timberPkComponents-04gl55Zt.js"
+      "_timberPkComponents-BoxGpGQU.js"
+    ],
+    "dynamicImports": [
+      "../../../node_modules/socket.io-client/build/esm/index.js"
     ],
     "css": [
       "assets/timber-CnPtdmAb.css"

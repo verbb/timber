@@ -5,7 +5,6 @@ use verbb\timber\Timber;
 use verbb\timber\helpers\LogFiles;
 
 use Craft;
-use craft\helpers\App;
 use craft\helpers\FileHelper;
 use craft\helpers\StringHelper;
 use craft\web\Controller;
@@ -15,10 +14,18 @@ use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 
+use Throwable;
 use ZipArchive;
 
 class LogsController extends Controller
 {
+    // Constants
+    // =========================================================================
+
+    private const MAX_DOWNLOAD_FILES = 250;
+    private const MAX_DOWNLOAD_BYTES = 1_073_741_824;
+
+
     // Public Methods
     // =========================================================================
 
@@ -50,8 +57,8 @@ class LogsController extends Controller
         $limit = max(1, min($limit, $maxPage));
         $page = max(0, (int)$page);
 
-        $supportsLevel = true;
-        $supportsCategory = true;
+        $supportsLevel = false;
+        $supportsCategory = false;
 
         $logQuery = Timber::$plugin->getService()->getLogs($logFile);
         $logQuery->orderBy($orderBy);
@@ -60,18 +67,22 @@ class LogsController extends Controller
             $logQuery->andFilterWhere(['like', 'message', $search]);
         }
 
-        // Generate file info for levels, categories and more
+        // Parse/filter/sort once from the cached bounded window. The previous query
+        // pipeline rescanned the entire in-memory log set for facets, count and page.
+        $matchingLogs = $logQuery->all();
+
+        // Generate file info for levels, categories and more.
         $logInfo = [
             'levels' => [],
             'categories' => [],
         ];
+        $filteredLogs = [];
+        $levels = is_array($levels) ? $levels : [];
+        $categories = is_array($categories) ? $categories : [];
 
-        // Fetch all logs for a search string here. This allows us to get the full set of logs
-        // before adding in filtering options like levels and pagination. We need the full set of
-        // data to get the info for the entire data set
-        foreach ($logQuery->all() as $log) {
+        foreach ($matchingLogs as $log) {
             $level = $log['level'] ?? null;
-            $supportsLevel = (bool)$level;
+            $supportsLevel = $supportsLevel || (bool)$level;
 
             if ($level) {
                 if (!isset($logInfo['levels'][$level])) {
@@ -82,7 +93,7 @@ class LogsController extends Controller
             }
 
             $category = $log['category'] ?? null;
-            $supportsCategory = (bool)$category;
+            $supportsCategory = $supportsCategory || (bool)$category;
 
             if ($category) {
                 if (!isset($logInfo['categories'][$category])) {
@@ -91,28 +102,24 @@ class LogsController extends Controller
 
                 $logInfo['categories'][$category] += 1;
             }
+
+            if ($levels && !in_array($level, $levels, true)) {
+                continue;
+            }
+
+            if ($categories && !in_array($category, $categories, true)) {
+                continue;
+            }
+
+            $filteredLogs[] = $log;
         }
 
         ksort($logInfo['levels']);
         ksort($logInfo['categories']);
 
-        // Always filter, as even empty arrays will search all
-        if ($supportsLevel) {
-            $logQuery->andFilterWhere(['in', 'level', $levels]);
-        }
-
-        if ($supportsCategory) {
-            $logQuery->andFilterWhere(['in', 'category', $categories]);
-        }
-
-        // Save here before paginating
-        $totalCount = $logQuery->count();
-
-        // Paginate now we've saved all we need for other bits
+        $totalCount = count($filteredLogs);
         $offset = $page * $limit;
-        $logQuery->limit($limit)->offset($offset);
-
-        $logs = $logQuery->all();
+        $logs = array_slice($filteredLogs, $offset, $limit);
 
         return $this->asJson([
             'logs' => $logs,
@@ -123,7 +130,7 @@ class LogsController extends Controller
                 'page' => $page,
                 'count' => count($logs),
                 'totalCount' => $totalCount,
-                'min' => $offset + 1,
+                'min' => $logs === [] ? 0 : $offset + 1,
                 'max' => min($totalCount, $offset + $limit),
             ],
         ]);
@@ -169,29 +176,49 @@ class LogsController extends Controller
             throw new ForbiddenHttpException(Craft::t('timber', 'User not authorized to download log.'));
         }
 
+        $files = LogFiles::visible($currentUser);
+        $totalBytes = array_sum(array_column($files, 'size'));
+
+        if (count($files) > self::MAX_DOWNLOAD_FILES || $totalBytes > self::MAX_DOWNLOAD_BYTES) {
+            throw new BadRequestHttpException(Craft::t('timber', 'The selected logs are too large to download together. Download individual files instead.'));
+        }
+
         $zipPath = Craft::$app->getPath()->getTempPath() . '/' . StringHelper::UUID() . '.zip';
         $zip = new ZipArchive();
+        $zipOpened = false;
 
-        if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
-            throw new Exception('Cannot create zip at ' . $zipPath);
-        }
+        try {
+            if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
+                throw new Exception('Cannot create zip at ' . $zipPath);
+            }
+            $zipOpened = true;
 
-        App::maxPowerCaptain();
-
-        foreach (LogFiles::visible($currentUser) as $file) {
-            $handle = @fopen($file['path'], 'rb');
-
-            if ($handle === false) {
-                continue;
+            foreach ($files as $file) {
+                // Let libzip stream from disk; addFromString() duplicated every log in PHP memory.
+                if (!$zip->addFile($file['path'], basename($file['path']))) {
+                    throw new Exception('Cannot add log to zip: ' . basename($file['path']));
+                }
             }
 
-            $zip->addFromString(basename($file['path']), stream_get_contents($handle));
-            fclose($handle);
+            if (!$zip->close()) {
+                throw new Exception('Cannot finish zip at ' . $zipPath);
+            }
+            $zipOpened = false;
+        } catch (Throwable $e) {
+            if ($zipOpened) {
+                $zip->close();
+            }
+            FileHelper::unlink($zipPath);
+
+            throw $e;
         }
 
-        $zip->close();
+        $response = $this->response->sendFile($zipPath, 'logs.zip');
+        $response->on(Response::EVENT_AFTER_SEND, static function() use ($zipPath): void {
+            FileHelper::unlink($zipPath);
+        });
 
-        return $this->response->sendFile($zipPath, 'logs.zip');
+        return $response;
     }
 
     public function actionDelete(): Response

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use craft\elements\User;
 use verbb\timber\events\ModifyLogParsersEvent;
+use verbb\timber\events\ModifyLogFilesEvent;
+use verbb\timber\console\controllers\LogsController as ConsoleLogsController;
 use verbb\timber\helpers\LogFiles;
 use verbb\timber\helpers\LogParser;
 use verbb\timber\models\Settings;
@@ -38,25 +40,33 @@ describe('LogParser', function() {
         expect($craft5['channel'])->toBe('web');
         expect($craft5['level'])->toBe('INFO');
         expect($craft5['category'])->toBe('yii\\db\\Connection::open');
+        expect($craft5['message'])->toBe("Opening DB connection\n");
+        expect($craft5['context'])->toBeNull();
 
         $craft3 = LogParser::parseEntry("2024-01-15 10:30:45 [web][application][-][error][craft\\services\\Plugins] Something failed\n", $defaultLog);
         expect($craft3['datetime'])->toBe('2024-01-15 10:30:45');
         expect($craft3['level'])->toBe('error');
+        expect($craft3['category'])->toBe('craft\\services\\Plugins');
+        expect($craft3['message'])->toBe("Something failed\n");
 
         $monolog = LogParser::parseEntry("[2024-01-15T10:30:45+00:00] app.INFO: Something happened\n", $defaultLog);
         expect($monolog['datetime'])->toBe('2024-01-15T10:30:45+00:00');
         expect($monolog['channel'])->toBe('app');
         expect($monolog['level'])->toBe('INFO');
+        expect($monolog['message'])->toBe("Something happened\n");
 
         $formie = LogParser::parseEntry("2026-04-14 14:15:37 [ERROR] Submission failed\n", $defaultLog);
         expect($formie['datetime'])->toBe('2026-04-14 14:15:37');
         expect($formie['level'])->toBe('ERROR');
+        expect($formie['message'])->toBe("Submission failed\n");
 
         $blitz = LogParser::parseEntry("[2026-04-15 07:33:42] Cache cleared\n", $defaultLog);
         expect($blitz['datetime'])->toBe('2026-04-15 07:33:42');
+        expect($blitz['message'])->toBe("Cache cleared\n");
 
         $bare = LogParser::parseEntry("2026-04-10 14:30:42 ondemand message\n", $defaultLog);
         expect($bare['datetime'])->toBe('2026-04-10 14:30:42');
+        expect($bare['message'])->toBe("ondemand message\n");
 
         $raw = LogParser::parseEntry("not a normal log line at all\n", $defaultLog);
         expect($raw['datetime'])->toBeNull();
@@ -111,12 +121,26 @@ describe('LogFiles canView', function() {
         $admin = User::find()->admin(true)->status(null)->one();
         expect($admin)->not->toBeNull();
 
-        $files = LogFiles::findAll();
-        if ($files === []) {
-            $this->markTestSkipped('No log files present in the test install catalog.');
-        }
+        $temporaryFile = tempnam(sys_get_temp_dir(), 'timber-catalog-');
+        $file = $temporaryFile . '.log';
+        rename($temporaryFile, $file);
+        file_put_contents($file, "2026-08-18 17:00:27 [web.INFO] [test] Visible\n");
+        $handler = function(ModifyLogFilesEvent $event) use ($file): void {
+            $event->logFiles[] = $file;
+        };
+        Event::on(LogFiles::class, LogFiles::EVENT_MODIFY_LOG_FILES, $handler);
+        $catalog = new ReflectionProperty(LogFiles::class, 'allFiles');
+        $catalog->setAccessible(true);
+        $catalog->setValue(null, null);
 
-        expect(LogFiles::canView($files[0]['path'], $admin))->toBeTrue();
+        try {
+            expect(LogFiles::canView($file, $admin))->toBeTrue()
+                ->and(LogFiles::canView($file . '.missing', $admin))->toBeFalse();
+        } finally {
+            Event::off(LogFiles::class, LogFiles::EVENT_MODIFY_LOG_FILES, $handler);
+            $catalog->setValue(null, null);
+            @unlink($file);
+        }
     });
 });
 
@@ -134,17 +158,19 @@ describe('Service cache invalidation', function() {
         $two = $service->getLogs($file)->all();
         unlink($file);
 
-        expect($one)->not->toBe($two);
+        expect($one[0]['message'])->toContain('AAA')
+            ->and($two[0]['message'])->toContain('BBB')
+            ->and($two[0]['message'])->not->toContain('AAA');
     });
 });
 
 describe('Realtime payload contract', function() {
     it('emits invalidation-only payloads from the console watcher', function() {
-        $source = (string)file_get_contents(dirname(__DIR__, 2) . '/src/console/controllers/LogsController.php');
+        $controller = (new ReflectionClass(ConsoleLogsController::class))->newInstanceWithoutConstructor();
+        $method = new ReflectionMethod(ConsoleLogsController::class, '_invalidationPayload');
+        $method->setAccessible(true);
 
-        expect($source)->toContain("\$emitter->emit('logUpdate'");
-        expect($source)->toContain("'file' => \$file");
-        // Payload array should only pass the file path — no log bodies.
-        expect($source)->toMatch("/emit\('logUpdate',\s*\[\s*'file'\s*=>\s*\\\$file,\s*\]/s");
+        expect($method->invoke($controller, '/storage/logs/web.log'))
+            ->toBe(['file' => '/storage/logs/web.log']);
     });
 });

@@ -14,19 +14,7 @@ use yii\web\ForbiddenHttpException;
 
 class LogFiles
 {
-    // Constants
-    // =========================================================================
-
-    public const EVENT_MODIFY_LOG_FILES = 'modifyLogFiles';
-
-
-    // Properties
-    // =========================================================================
-
-    private static ?array $allFiles = null;
-
-
-    // Public Methods
+    // Static Methods
     // =========================================================================
 
     /**
@@ -81,7 +69,7 @@ class LogFiles
             sort($paths);
 
             foreach ($paths as $path) {
-                if (!self::isDiscoverableLogFilename(basename($path))) {
+                if (!self::_isDiscoverableLogFilename(basename($path))) {
                     continue;
                 }
 
@@ -103,7 +91,7 @@ class LogFiles
             $files = $event->logFiles;
         }
 
-        return self::$allFiles = self::normalizeLogFiles($files);
+        return self::$allFiles = self::_normalizeLogFiles($files);
     }
 
     /**
@@ -130,7 +118,7 @@ class LogFiles
             }
 
             // Respect plugin include/exclude stems (same policy as the CP utility).
-            if (!self::passesConfig($file['stem'])) {
+            if (!self::_passesConfig($file['stem'])) {
                 continue;
             }
 
@@ -184,7 +172,7 @@ class LogFiles
     public static function canView(string $path, ?User $user = null): bool
     {
         $user = $user ?? Craft::$app->getUser()->getIdentity();
-        $file = self::catalogFile($path);
+        $file = self::_catalogFile($path);
 
         if (!$user || !$file) {
             return false;
@@ -192,7 +180,7 @@ class LogFiles
 
         $stem = $file['stem'];
 
-        if (!self::passesConfig($stem)) {
+        if (!self::_passesConfig($stem)) {
             return false;
         }
 
@@ -220,23 +208,19 @@ class LogFiles
     {
         // The catalog is the allowlist: default `@storage/logs` discovery, plus anything
         // added (or minus anything removed) via EVENT_MODIFY_LOG_FILES.
-        return self::catalogFile($path) !== null;
+        return self::_catalogFile($path) !== null;
     }
 
-
-    // Private Methods
-    // =========================================================================
-
-    private static function catalogFile(string $path): ?array
+    private static function _catalogFile(string $path): ?array
     {
-        if (!self::isDiscoverableLogFilename(basename($path))) {
+        if (!self::_isDiscoverableLogFilename(basename($path))) {
             return null;
         }
 
-        $resolved = self::normalizePath($path);
+        $resolved = self::_normalizePath($path);
 
         foreach (self::findAll() as $file) {
-            if ($file['path'] === $path || self::normalizePath($file['path']) === $resolved) {
+            if ($file['path'] === $path || self::_normalizePath($file['path']) === $resolved) {
                 return $file;
             }
         }
@@ -244,7 +228,7 @@ class LogFiles
         return null;
     }
 
-    private static function isDiscoverableLogFilename(string $filename): bool
+    private static function _isDiscoverableLogFilename(string $filename): bool
     {
         if ($filename === '' || str_starts_with($filename, '.')) {
             return false;
@@ -256,7 +240,7 @@ class LogFiles
         );
     }
 
-    private static function normalizeLogFiles(array $files): array
+    private static function _normalizeLogFiles(array $files): array
     {
         $normalized = [];
         $seen = [];
@@ -264,7 +248,7 @@ class LogFiles
         foreach ($files as $file) {
             $path = is_string($file) ? $file : (string)($file['path'] ?? '');
 
-            if ($path === '' || !self::isDiscoverableLogFilename(basename($path)) || !is_file($path)) {
+            if ($path === '' || !self::_isDiscoverableLogFilename(basename($path)) || !is_file($path)) {
                 continue;
             }
 
@@ -295,7 +279,7 @@ class LogFiles
         return $normalized;
     }
 
-    private static function normalizePath(string $path): string
+    private static function _normalizePath(string $path): string
     {
         $resolved = realpath($path);
 
@@ -306,7 +290,7 @@ class LogFiles
         return str_replace('\\', '/', $path);
     }
 
-    private static function passesConfig(string $stem): bool
+    private static function _passesConfig(string $stem): bool
     {
         /* @var Settings $settings */
         $settings = Timber::$plugin->getSettings();
@@ -323,4 +307,16 @@ class LogFiles
 
         return true;
     }
+
+
+    // Constants
+    // =========================================================================
+
+    public const EVENT_MODIFY_LOG_FILES = 'modifyLogFiles';
+
+
+    // Properties
+    // =========================================================================
+
+    private static ?array $allFiles = null;
 }

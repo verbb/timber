@@ -10,12 +10,20 @@
 - Add a `modifyLogParsers` event so modules can register custom line parsers and line-start patterns per log file.
 
 ### Changed
+- Load Socket.IO only when realtime updates are enabled, and update frontend dependencies to their patched releases.
+- Clarified optional PHP configuration with focused examples and linkable setting details.
 - Rebuild the Logs utility UI on [Plugin Kit](https://docs.verbb.io/plugin-kit/web/) (web components). Existing log viewing, filtering, search, pagination, download/delete, and real-time updates are preserved.
 - The log file picker is now a searchable combobox.
 - Improve accessibility, arrow-key, typeahead, and Enter/Space navigation.
 - Improve responsive handling for the Logs utility.
+- Clarify log-reading limits, configuration, and log access in the documentation.
 
 ### Fixed
+- Bound individual plain and compressed log-line reads so malformed newline-free files cannot exceed the configured memory window.
+- Stream bounded “Download all” archives from disk and remove their temporary ZIP files after sending.
+- Scan each bounded log window once when calculating filters and pagination.
+- Keep level/category filters available when parsed and raw entries are mixed, and report empty pagination ranges accurately.
+- Treat log searches as literal text so invalid or pathological regular expressions cannot break the viewer.
 - Keep Yii exception-chain lines (`[previous exception]`, stack traces) attached to the parent ERROR entry instead of splitting them into fake rows.
 
 ## 2.0.4 - 2025-11-06

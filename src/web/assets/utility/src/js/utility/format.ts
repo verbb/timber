@@ -64,13 +64,15 @@ export const formatLevelLabel = (level: string | null | undefined, toLowerCase =
     return level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
 };
 
-/** Wrap search hits in `<mark>` — same RegExp(global) behaviour as BEFORE (no escape). */
+/** Wrap literal search hits in `<mark>` without treating user input as a regular expression. */
 export const markSearchHits = (message: string, searchText: string): string => {
     if (!searchText) {
         return message;
     }
 
-    return message.replace(new RegExp(searchText, 'g'), '<mark>$&</mark>');
+    const escapedSearch = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    return message.replace(new RegExp(escapedSearch, 'gi'), '<mark>$&</mark>');
 };
 
 export const escapeHtml = (value: string): string => {

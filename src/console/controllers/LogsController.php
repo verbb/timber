@@ -17,14 +17,12 @@ use Throwable;
 
 use Channel\Server;
 use Emitter;
-use PHPSocketIO\SocketIO;
-use PHPSocketIO\ChannelAdapter;
-use Workerman\Worker;
-
-use Symfony\Component\Process\Process;
-
-use Graze\ParallelProcess\Pool;
 use Graze\ParallelProcess\Event\RunEvent;
+use Graze\ParallelProcess\Pool;
+use PHPSocketIO\ChannelAdapter;
+use PHPSocketIO\SocketIO;
+use Symfony\Component\Process\Process;
+use Workerman\Worker;
 
 /**
  * Manages Timber logs.
@@ -92,9 +90,7 @@ class LogsController extends Controller
                     // the authorized timber/logs HTTP action (SEC-04).
                     $emitter = new Emitter();
 
-                    $emitter->emit('logUpdate', [
-                        'file' => $file,
-                    ]);
+                    $emitter->emit('logUpdate', $this->_invalidationPayload($file));
                 } catch (Throwable $e) {
                     $this->stdout('[ERROR]', Console::FG_RED);
                     $this->stdout(' → ' . $e->getMessage() . PHP_EOL, Console::FG_GREY);
@@ -109,5 +105,15 @@ class LogsController extends Controller
         $pool->run();
 
         return ExitCode::OK;
+    }
+
+
+    // Private Methods
+    // =========================================================================
+
+    /** Keep realtime messages free of log content; authorized clients refetch it. */
+    private function _invalidationPayload(string $file): array
+    {
+        return ['file' => $file];
     }
 }
