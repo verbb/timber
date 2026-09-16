@@ -1004,7 +1004,7 @@ export class TimberUtility {
             }
 
             if (!response.data.logs) {
-                throw new Error(response.data);
+                throw new Error(response.data.message ?? response.data);
             }
 
             this.logs = response.data.logs as TimberLogEntry[];
@@ -1022,7 +1022,7 @@ export class TimberUtility {
             }
 
             this.error = true;
-            this.errorMessage = String(error);
+            this.errorMessage = escapeHtml(String(get(error, 'response.data.message') ?? error));
 
             const errorDetail = get(error, 'response.data.error');
             const file1 = get(error, 'response.data.file');
@@ -1031,7 +1031,7 @@ export class TimberUtility {
             const line2 = get(error, 'response.data.trace.0.line');
 
             if (errorDetail) {
-                this.errorMessage += `<br><br><small>${errorDetail}</small><br><small>${file1}:${line1}</small><br><small>${file2}:${line2}</small>`;
+                this.errorMessage += `<br><br><small>${escapeHtml(String(errorDetail))}</small><br><small>${escapeHtml(String(file1))}:${escapeHtml(String(line1))}</small><br><small>${escapeHtml(String(file2))}:${escapeHtml(String(line2))}</small>`;
             }
         } finally {
             if (generation === this.fetchGeneration) {

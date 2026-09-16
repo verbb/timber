@@ -9,6 +9,7 @@ use craft\base\Component;
 
 use yii2mod\query\ArrayQuery;
 
+use RuntimeException;
 use SplQueue;
 
 class Service extends Component
@@ -80,7 +81,7 @@ class Service extends Component
         [$readLine, $close] = $this->openLogFile($logFile, $maxBytes);
 
         if ($readLine === null) {
-            return false;
+            throw new RuntimeException(Craft::t('timber', 'Unable to read the log file. Check its permissions and try again.'));
         }
 
         $entries = new SplQueue();

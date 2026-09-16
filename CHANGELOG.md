@@ -35,6 +35,7 @@
 - Show custom parser context in expanded log details.
 - Separate native PHP error entries and sort their timestamps correctly across month boundaries.
 - Preserve files with matching names from different directories in downloaded log archives.
+- Report unreadable log files as errors instead of empty results or downloads.
 - Report file deletion failures and retain undeleted files after partial bulk deletion.
 - Clear loading and error states after deleting logs, and ignore pending reads for deleted selections.
 - Keep raw and uncategorised entries visible when sorting, searching and changing files, and distinguish all filters from an empty selection.

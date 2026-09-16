@@ -147,3 +147,15 @@ it.each(['/logs/raw.log', '/logs/removed.log'])('reconciles partial bulk deletio
     expect(utility['error']).toBe(true);
     expect(utility['errorMessage']).toBe('Check &lt;directory&gt; permissions.');
 });
+
+it('shows an actionable read failure and recovers when refresh succeeds', async () => {
+    const { utility, request } = makeUtility({ logs: [{ message: 'Restored content' }], info: {} });
+    request.mockRejectedValueOnce({ response: { data: { message: 'Check <file> permissions.' } } });
+    await utility['fetchLog']();
+    expect(utility['error']).toBe(true);
+    expect(utility['errorMessage']).toBe('Check &lt;file&gt; permissions.');
+    expect(utility['loading']).toBe(false);
+    await utility['fetchLog']();
+    expect(utility['error']).toBe(false);
+    expect(utility['logs']).toEqual([{ message: 'Restored content' }]);
+});

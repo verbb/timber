@@ -13,7 +13,9 @@ use yii\base\Exception;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\web\Response;
+use yii\web\ServerErrorHttpException;
 
+use RuntimeException;
 use Throwable;
 use ZipArchive;
 
@@ -60,7 +62,12 @@ class LogsController extends Controller
         $supportsLevel = false;
         $supportsCategory = false;
 
-        $logQuery = Timber::$plugin->getService()->getLogs($logFile);
+        try {
+            $logQuery = Timber::$plugin->getService()->getLogs($logFile);
+        } catch (RuntimeException $e) {
+            throw new ServerErrorHttpException($e->getMessage(), 0, $e);
+        }
+
         $logQuery->orderBy($orderBy);
 
         // Parse/filter/sort once from the cached bounded window. The previous query
@@ -159,6 +166,10 @@ class LogsController extends Controller
         LogFiles::requireView($logFile, $currentUser);
 
         $file = @fopen($logFile, 'rb');
+
+        if ($file === false) {
+            throw new ServerErrorHttpException(Craft::t('timber', 'Unable to read the log file. Check its permissions and try again.'));
+        }
 
         return $this->response->sendStreamAsFile($file, basename($logFile), [
             'fileSize' => filesize($logFile),
