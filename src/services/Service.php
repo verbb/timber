@@ -31,11 +31,11 @@ class Service extends Component
         $maxBytes = Timber::$plugin?->getSettings()?->getMaxLogReadBytes() ?? 52_428_800;
 
         $compressed = LogFiles::isCompressed($logFile);
+        $generation = $this->_fileGenerationToken($logFile);
         $cacheKey = md5(
-            LogParser::VERSION . ':' . self::MAX_PARSED_ENTRIES . ':'
+            'timber.current:' . LogParser::VERSION . ':' . self::MAX_PARSED_ENTRIES . ':'
             . LogParser::cacheKeySuffix($logFile) . ':'
             . $logFile . ':'
-            . $this->_fileGenerationToken($logFile) . ':'
             . $maxBytes . ':' . (int)$compressed
         );
 
@@ -47,9 +47,21 @@ class Service extends Component
 
         // Cache serialization duplicates the parsed window in memory. Large windows
         // are read directly; gzip eligibility uses its uncompressed read budget.
-        $logs = $readBytes > self::MAX_CACHED_READ_BYTES || $modified >= time() - 1
-            ? $read()
-            : Craft::$app->getCache()->getOrSet($cacheKey, $read);
+        if ($readBytes > self::MAX_CACHED_READ_BYTES || $modified >= time() - 1) {
+            $logs = $read();
+        } else {
+            $cache = Craft::$app->getCache();
+            $cached = $cache->get($cacheKey);
+
+            if (is_array($cached) && ($cached['generation'] ?? null) === $generation) {
+                $logs = $cached['logs'];
+            } else {
+                // Replace obsolete generations instead of retaining a parsed history.
+                unset($cached);
+                $logs = $read();
+                $cache->set($cacheKey, ['generation' => $generation, 'logs' => $logs]);
+            }
+        }
 
         if (!is_array($logs)) {
             $logs = [];
