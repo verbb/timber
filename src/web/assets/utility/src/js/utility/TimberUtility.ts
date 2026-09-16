@@ -857,7 +857,7 @@ export class TimberUtility {
             const response = await Craft.sendActionRequest('POST', 'timber/logs/delete', { data: { file } });
 
             if (!response.data.success) {
-                throw new Error(response.data);
+                throw new Error(response.data.message ?? response.data);
             }
 
             this.proxyLogFiles = this.proxyLogFiles.filter((item) => item.path !== file);
@@ -871,7 +871,7 @@ export class TimberUtility {
             this.renderBody();
         } catch (error) {
             this.error = true;
-            this.errorMessage = String(error);
+            this.errorMessage = escapeHtml(String(get(error, 'response.data.message') ?? error));
             this.renderBody();
         } finally {
             this.deleteLoading = '';
@@ -892,7 +892,7 @@ export class TimberUtility {
             const response = await Craft.sendActionRequest('POST', 'timber/logs/delete-all', {});
 
             if (!response.data.success) {
-                throw new Error(response.data);
+                throw new Error(response.data.message ?? response.data);
             }
 
             this.clearSelectedLog();
@@ -902,8 +902,21 @@ export class TimberUtility {
             this.rebuildFileOptions();
             this.renderBody();
         } catch (error) {
+            const deleted = get(error, 'response.data.deleted');
+
+            if (Array.isArray(deleted)) {
+                this.proxyLogFiles = this.proxyLogFiles.filter((item) => !deleted.includes(item.path));
+
+                if (deleted.includes(this.logFile)) {
+                    this.clearSelectedLog();
+                }
+
+                this.syncFileTrigger();
+                this.rebuildFileOptions();
+            }
+
             this.error = true;
-            this.errorMessage = String(error);
+            this.errorMessage = escapeHtml(String(get(error, 'response.data.message') ?? error));
             this.renderBody();
         }
     }

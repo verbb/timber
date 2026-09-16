@@ -261,8 +261,13 @@ class LogsController extends Controller
 
         LogFiles::requireView($logFile, $currentUser);
 
-        if (file_exists($logFile)) {
-            FileHelper::unlink($logFile);
+        if (file_exists($logFile) && !FileHelper::unlink($logFile)) {
+            $this->response->setStatusCode(500);
+
+            return $this->asJson([
+                'success' => false,
+                'message' => Craft::t('timber', 'Unable to delete the log file. Check its directory permissions and try again.'),
+            ]);
         }
 
         return $this->asJson(['success' => true]);
@@ -280,10 +285,25 @@ class LogsController extends Controller
             throw new ForbiddenHttpException(Craft::t('timber', 'User not authorized to delete log.'));
         }
 
+        $deleted = [];
+        $failed = false;
+
         foreach (LogFiles::visible($currentUser) as $file) {
-            if (file_exists($file['path'])) {
-                FileHelper::unlink($file['path']);
+            if (file_exists($file['path']) && !FileHelper::unlink($file['path'])) {
+                $failed = true;
+            } else {
+                $deleted[] = $file['path'];
             }
+        }
+
+        if ($failed) {
+            $this->response->setStatusCode(500);
+
+            return $this->asJson([
+                'success' => false,
+                'deleted' => $deleted,
+                'message' => Craft::t('timber', 'Some log files could not be deleted. Check their directory permissions and try again.'),
+            ]);
         }
 
         return $this->asJson(['success' => true]);

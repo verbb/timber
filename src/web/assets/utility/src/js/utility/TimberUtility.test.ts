@@ -130,3 +130,20 @@ it('keeps the selected log request active when a different file is deleted', asy
     expect(utility['logFile']).toBe('/logs/raw.log');
     expect(utility['logs']).toEqual([{ message: 'Selected file remains readable' }]);
 });
+
+it.each(['/logs/raw.log', '/logs/removed.log'])('reconciles partial bulk deletion while selecting %s', async (selected) => {
+    const { utility, request } = makeUtility({});
+    vi.stubGlobal('confirm', () => true);
+    Object.assign(Craft, { t: (_category: string, text: string) => text });
+    Object.assign(utility, { logFile: selected, proxyLogFiles: [
+        { path: '/logs/raw.log', size: 10 }, { path: '/logs/removed.log', size: 10 },
+    ] });
+    request.mockRejectedValue({ response: { data: {
+        success: false, deleted: ['/logs/removed.log'], message: 'Check <directory> permissions.',
+    } } });
+    await utility['deleteAllLogs']();
+    expect(utility['proxyLogFiles'].map((file) => file.path)).toEqual(['/logs/raw.log']);
+    expect(utility['logFile']).toBe(selected === '/logs/removed.log' ? null : selected);
+    expect(utility['error']).toBe(true);
+    expect(utility['errorMessage']).toBe('Check &lt;directory&gt; permissions.');
+});
