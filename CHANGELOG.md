@@ -20,6 +20,7 @@
 - Clarify log-reading limits, configuration, and log access in the documentation.
 
 ### Fixed
+- Reject WebSocket ports outside the valid range.
 - Restore live-update connections to the PHP socket server and show update notifications for empty logs without reporting an inaccurate entry count.
 - Allow file-specific view permissions to be saved without granting access to every log.
 - Allow log details to be expanded and collapsed with the keyboard, retaining focus after each action.

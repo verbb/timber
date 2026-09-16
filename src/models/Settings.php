@@ -111,6 +111,7 @@ class Settings extends Model
 
         $rules[] = [['paginationLimit', 'socketPort'], 'required'];
         $rules[] = [['paginationLimit', 'socketPort'], 'integer', 'min' => 1];
+        $rules[] = ['socketPort', 'integer', 'max' => 65535];
         $rules[] = [['maxPaginationLimit', 'maxLogReadBytes'], 'integer', 'min' => 0];
 
         return $rules;
