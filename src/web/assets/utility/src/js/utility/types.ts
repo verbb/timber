@@ -7,6 +7,7 @@ export interface TimberLogFile {
 
 export interface TimberSettings {
     logFiles: TimberLogFile[];
+    logDirectory?: string;
     limit: number;
     socketPort: number;
     enableRealTimeUpdates: boolean;

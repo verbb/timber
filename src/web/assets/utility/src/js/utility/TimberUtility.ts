@@ -413,12 +413,12 @@ export class TimberUtility {
                 selected: boolean;
             };
             row.value = item.path;
-            row.label = getPrettyPathText(item.path);
+            row.label = getPrettyPathText(item.path, this.settings.logDirectory);
             row.selected = this.logFile === item.path;
 
             const name = document.createElement('span');
             name.className = 'ti-file-name';
-            name.innerHTML = getPrettyPathHtml(item.path);
+            name.innerHTML = getPrettyPathHtml(item.path, this.settings.logDirectory);
 
             const content = document.createElement('span');
             content.className = 'ti-file-option-content';

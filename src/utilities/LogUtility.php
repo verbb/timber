@@ -46,6 +46,7 @@ class LogUtility extends Utility
 
         $componentSettings = [
             'logFiles' => $logFiles,
+            'logDirectory' => realpath(Craft::getAlias('@storage/logs')) ?: Craft::getAlias('@storage/logs'),
             'limit' => $settings->paginationLimit,
             'socketPort' => $settings->socketPort,
             'enableRealTimeUpdates' => $settings->enableRealTimeUpdates,

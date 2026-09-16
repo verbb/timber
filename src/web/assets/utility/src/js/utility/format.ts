@@ -9,25 +9,23 @@ export const clone = <T>(value: T): T => {
     return JSON.parse(JSON.stringify(value)) as T;
 };
 
-/** `@storage/logs/<filename>` with muted prefix span (matches BEFORE `getPrettyPath`). */
-export const getPrettyPathText = (value: string | null | undefined): string => {
+/** Retain directories so recursive and event-added logs remain distinguishable. */
+export const getPrettyPathText = (value: string | null | undefined, logDirectory?: string): string => {
     if (!value) {
         return '';
     }
 
-    const filename = value.split(/[\\/]/).pop() ?? value;
+    const path = value.replace(/\\/g, '/');
+    const root = logDirectory?.replace(/\\/g, '/').replace(/\/$/, '');
 
-    return `@storage/logs/${filename}`;
+    return root && path.startsWith(`${root}/`) ? `@storage/logs/${path.slice(root.length + 1)}` : path;
 };
 
-export const getPrettyPathHtml = (value: string | null | undefined): string => {
-    const text = getPrettyPathText(value);
+export const getPrettyPathHtml = (value: string | null | undefined, logDirectory?: string): string => {
+    const text = getPrettyPathText(value, logDirectory);
+    const split = text.lastIndexOf('/') + 1;
 
-    if (!text) {
-        return '';
-    }
-
-    return `<span>@storage/logs/</span>${escapeHtml(text.replace('@storage/logs/', ''))}`;
+    return text ? `<span>${escapeHtml(text.slice(0, split))}</span>${escapeHtml(text.slice(split))}` : '';
 };
 
 export const getPrettySize = (bytes: number | null | undefined, decimals = 2): string => {
