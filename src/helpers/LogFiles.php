@@ -29,18 +29,12 @@ class LogFiles
             $filename = substr($filename, 0, -3);
         }
 
+        // A dated Craft log can itself be rotated. Remove outer suffixes first so
+        // every generation retains the same base name for configuration and grants.
+        $filename = preg_replace('/(\.(?:log|txt))(?:-\d{4}-\d{2}-\d{2})?(?:\.\d+|-\d{8})?$/', '$1', $filename);
+
         // Craft dated: web-2026-08-19.log
         if (preg_match('/^(.+?)-\d{4}-\d{2}-\d{2}\.(log|txt)$/', $filename, $matches)) {
-            return $matches[1];
-        }
-
-        // Logrotate numbered: web.log.1
-        if (preg_match('/^(.+?)\.(log|txt)\.\d+$/', $filename, $matches)) {
-            return $matches[1];
-        }
-
-        // Logrotate dated suffix: web.log-20260325
-        if (preg_match('/^(.+?)\.(log|txt)-\d{8}$/', $filename, $matches)) {
             return $matches[1];
         }
 

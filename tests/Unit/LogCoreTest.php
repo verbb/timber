@@ -23,6 +23,11 @@ describe('LogFiles stem', function() {
             'web.log-20260325.gz' => 'web',
             'custom.txt' => 'custom',
             'queue-2026-08-19.log' => 'queue',
+            'queue-2026-08-19.log.1' => 'queue',
+            'queue-2026-08-19.log.2.gz' => 'queue',
+            'queue-2026-08-19.log-20260820' => 'queue',
+            'queue.log-2026-08-19.1.gz' => 'queue',
+            'custom-2026-08-19.txt.1.gz' => 'custom',
         ];
 
         foreach ($cases as $filename => $expected) {
