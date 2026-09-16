@@ -39,6 +39,7 @@
 - Report unreadable log files as errors instead of empty results or downloads.
 - Report file deletion failures and retain undeleted files after partial bulk deletion.
 - Clear loading and error states after deleting logs, and ignore pending reads for deleted selections.
+- Keep zero-valued levels and categories available in log filters.
 - Preserve chosen level and category filters when searches change the available options.
 - Keep raw and uncategorised entries visible when sorting, searching and changing files, and distinguish all filters from an empty selection.
 - Bound individual plain and compressed log-line reads so malformed newline-free files cannot exceed the configured memory window.

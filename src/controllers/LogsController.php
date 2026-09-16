@@ -91,9 +91,10 @@ class LogsController extends Controller
             }
 
             $level = $log['level'] ?? null;
-            $supportsLevel = $supportsLevel || (bool)$level;
+            $hasLevel = $level !== null && $level !== '';
+            $supportsLevel = $supportsLevel || $hasLevel;
 
-            if ($level) {
+            if ($hasLevel) {
                 if (!isset($logInfo['levels'][$level])) {
                     $logInfo['levels'][$level] = 0;
                 }
@@ -102,9 +103,10 @@ class LogsController extends Controller
             }
 
             $category = $log['category'] ?? null;
-            $supportsCategory = $supportsCategory || (bool)$category;
+            $hasCategory = $category !== null && $category !== '';
+            $supportsCategory = $supportsCategory || $hasCategory;
 
-            if ($category) {
+            if ($hasCategory) {
                 if (!isset($logInfo['categories'][$category])) {
                     $logInfo['categories'][$category] = 0;
                 }

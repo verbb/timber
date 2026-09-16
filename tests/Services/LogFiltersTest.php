@@ -47,3 +47,27 @@ it('searches literal displayed messages including zero and escaped characters', 
         $catalog->setValue(null, null);
     }
 });
+
+it('keeps literal zero level and category values available as facets', function() {
+    $file = Craft::getAlias('@storage/logs') . '/audit-zero-facets.log';
+    file_put_contents($file, "2026-09-16 08:00:00 [0] [0] Zero facets\n2026-09-16 08:01:00 [INFO] [app] Normal facets\n");
+    $catalog = new ReflectionProperty(LogFiles::class, 'allFiles');
+    $catalog->setValue(null, null);
+    try {
+        AdminUser::login();
+        CpRequestContext::activate('actions/timber/logs/index', 'POST', true);
+        Craft::$app->getRequest()->setBodyParams(['file' => $file, 'levels' => ['0'], 'categories' => ['0']]);
+        $controller = new LogsController('logs', Timber::$plugin);
+        $controller->enableCsrfValidation = false;
+        $response = $controller->runAction('index');
+        expect($response->data['info']['levels']['0'] ?? null)->toBe(1);
+        expect($response->data['info']['categories']['0'] ?? null)->toBe(1);
+        expect($response->data['supportsLevel'])->toBeTrue();
+        expect($response->data['supportsCategory'])->toBeTrue();
+        expect($response->data['pagination']['totalCount'])->toBe(1);
+        expect($response->data['logs'][0]['message'])->toContain('Zero facets');
+    } finally {
+        unlink($file);
+        $catalog->setValue(null, null);
+    }
+});
