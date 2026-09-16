@@ -155,7 +155,7 @@ class LogFiles
         $visible = [];
 
         foreach (self::findAll() as $file) {
-            if (!self::canView($file['path'], $user)) {
+            if (!self::_canViewFile($file, $user)) {
                 continue;
             }
 
@@ -173,7 +173,28 @@ class LogFiles
         $user = $user ?? Craft::$app->getUser()->getIdentity();
         $file = self::_catalogFile($path);
 
-        if (!$user || !$file) {
+        return $file !== null && self::_canViewFile($file, $user);
+    }
+
+    public static function requireView(string $path, ?User $user = null): void
+    {
+        if (self::canView($path, $user)) {
+            return;
+        }
+
+        throw new ForbiddenHttpException(Craft::t('timber', 'User not authorized to view this log.'));
+    }
+
+    public static function isAccessibleLogPath(string $path): bool
+    {
+        // The catalog is the allowlist: default `@storage/logs` discovery, plus anything
+        // added (or minus anything removed) via EVENT_MODIFY_LOG_FILES.
+        return self::_catalogFile($path) !== null;
+    }
+
+    private static function _canViewFile(array $file, ?User $user): bool
+    {
+        if (!$user) {
             return false;
         }
 
@@ -192,22 +213,6 @@ class LogFiles
         }
 
         return $user->can('timber-viewLogs:' . $stem);
-    }
-
-    public static function requireView(string $path, ?User $user = null): void
-    {
-        if (self::canView($path, $user)) {
-            return;
-        }
-
-        throw new ForbiddenHttpException(Craft::t('timber', 'User not authorized to view this log.'));
-    }
-
-    public static function isAccessibleLogPath(string $path): bool
-    {
-        // The catalog is the allowlist: default `@storage/logs` discovery, plus anything
-        // added (or minus anything removed) via EVENT_MODIFY_LOG_FILES.
-        return self::_catalogFile($path) !== null;
     }
 
     private static function _catalogFile(string $path): ?array

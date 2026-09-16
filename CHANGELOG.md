@@ -22,6 +22,7 @@
 ### Fixed
 - Fixed a high-severity object injection vulnerability.
 - Fixed a moderate-severity access control vulnerability.
+- Avoid repeated catalog scans when listing large collections of log files.
 - Reduce memory use when parsing large log windows and avoid duplicating them during caching.
 - Bound dense log files to 100,000 retained entries, use small read buffers, and release raw entries during parsing to prevent excessive memory use.
 - Refresh cached log content after rapid same-size rewrites, including changes between sampled regions.

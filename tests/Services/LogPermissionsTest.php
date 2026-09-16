@@ -43,6 +43,8 @@ it('enforces real persisted file and action permissions for direct requests', fu
             Craft::$app->getUser()->setIdentity(User::find()->id($user->id)->status(null)->one());
             CpRequestContext::activate('actions/timber/logs/' . $action, 'POST', true);
             Craft::$app->getRequest()->setBodyParams(['file' => $file]);
+            $canView = in_array('timber-viewLogs', $permissions, true) || in_array('timber-viewLogs:permission-fixture', $permissions, true);
+            expect(in_array($file, array_column(LogFiles::visible(), 'path'), true))->toBe($canView);
             $controller = new LogsController('logs', Timber::$plugin);
             $controller->enableCsrfValidation = false;
             if ($allowed) {
