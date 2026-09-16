@@ -22,5 +22,12 @@
         "children": [
             "developers/events"
         ]
+    },
+    {
+        "title": "Troubleshooting",
+        "collapsable": false,
+        "children": [
+            "get-started/troubleshooting"
+        ]
     }
 ]

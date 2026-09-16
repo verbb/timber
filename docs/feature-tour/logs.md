@@ -1,8 +1,8 @@
 # Logs
 
-The main functionality of Timber is to provide a beautiful, simple and useful interface to view and manage your log files in your control panel. This makes it easy to view log files when you need it, or for when your clients are like to be hands-on with the technical information that logs bring.
+Timber lets you inspect Craft's log files from the control panel. Choose a file, filter its entries and expand a message to see the details recorded with it.
 
-## Log screen
+## Log Screen
 
 The Timber log screen is the interface for viewing logs. It's built as a Craft Utility, to sit alongside other similar tools.
 
@@ -18,7 +18,7 @@ You can also download or delete single log files, and download or delete **all**
 
 Log entries are also paginated for performance.
 
-## Log discovery
+## Log Discovery
 
 Timber scans Craft’s `@storage/logs` directory for:
 
@@ -37,20 +37,24 @@ Timber provides User permissions for certain features. You can enable access to 
 
 To restrict **which** log files a user group can see, leave **View all log files** unchecked and enable the nested permissions for specific files (`web`, `queue`, `phperrors`, and any plugin logs currently on disk). Dated files like `web-2026-08-19.log` are grouped under `web`. Users with **View all log files** continue to see new log files as they appear.
 
-:::tip
-If a user has **neither** View all **nor** any nested stem permissions, Timber keeps the historical default: they can see every file that passes site-wide config. To lock a group down to a subset, grant at least one nested stem permission (and leave View all off).
+:::warning
+If a user has neither **View all log files** nor a nested log-file permission, they can see every file permitted by the site-wide configuration. To restrict a group to a subset, leave **View all log files** off and grant at least one nested stem permission. To prevent log access entirely, remove access to the Logs utility.
 :::
 
-You can also limit the catalog for the whole site via `includedLogFiles` / `excludedLogFiles` in `config/timber.php` (or Settings → Timber). Config applies first; user permissions then filter further. Download all / delete all only affect files the user is allowed to see.
+You can also limit the catalogue for the whole site via `includedLogFiles` / `excludedLogFiles` in `config/timber.php` (or Settings → Timber). Config applies first; user permissions then filter further. Download all / delete all only affect files the user is allowed to see.
 
-Modules can add or remove files from the catalog with the `modifyLogFiles` event. See [Events](/developers/events).
+Modules can add or remove files from the catalogue with the `modifyLogFiles` event. See [Events](/developers/events).
 
 ## Performance
 
-Some log files can get pretty large. Fortunately, Craft will split log files automatically, but nevertheless Timber still needs to deal with large log files. We employ a few things to keep performance in check:
+For a large log, the utility may show only part of the file. Check the timestamps of the displayed entries before concluding that an event was not recorded. Download the file when you need to inspect its complete history.
 
-- Reading log files is done per-line, rather than loading the entire file into memory.
-- Log files are parsed into structured data and cached for next time.
-- Pagination of 100 (configurable) so not all log entries are rendered.
+The following limits keep viewing and downloading logs manageable:
 
-With these techniques, a 1GB log file takes about 15 seconds to load on a development environment and 5 seconds to load on a production environment.
+- Log files are read line by line rather than loaded entirely into memory.
+- Parsed data is cached until the file changes.
+- Results are paginated, with a configurable page size and an independent maximum.
+- An uncompressed file larger than `maxLogReadBytes` is parsed from a tail window instead of from its beginning. The default window is 50 MiB.
+- Download all is limited to 250 visible files and 1 GiB of source data per archive.
+
+When a file uses the tail window, older entries outside that window do not appear in Timber. Download the file or use server-side log tooling when you need its complete history. Gzip archives are read from the beginning and stop after the same uncompressed byte budget, so newer entries outside that window are omitted. Rotate logs regularly to keep individual files manageable.

@@ -1,7 +1,7 @@
 <p align="center"><img src="https://assets.verbb.io/plugins/timber/timber-icon.svg" width="100" height="100" alt="Timber icon"></p>
 <h1 align="center">Timber for Craft CMS</h1>
 
-Timber is a Craft CMS plugin for viewing application logs in the control panel. With a beautiful and functional interface, incredible performance and a few other goodies, it'll save you having to remote into a server just to look at your logs!
+Timber is a Craft CMS utility for viewing, filtering and managing application log files in the Control Panel.
 
 ## Features
 
@@ -9,8 +9,8 @@ Timber is a Craft CMS plugin for viewing application logs in the control panel. 
     - Filter logs by level or category.
     - Full-text search for log message.
     - Order by date, level, category or message.
-- Real-time logs pushed seamlessly using command line utilities. Sit there and watch your log entries come through in real-time, as soon as they're created!
-- Highly performant and low memory usage, even for 1GB+ files.
+- Optional real-time update notifications using long-running command-line processes.
+- Bounded parsing and pagination for large log files.
 - Download a single log file, or download all as a `zip` file.
 - Delete a single log file, or delete all.
 - Includes extra permissions to allow download, deletion, and which log files a user can see.
