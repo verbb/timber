@@ -63,7 +63,7 @@ class LogFiles
 
         if ($logsDir && is_dir($logsDir)) {
             $paths = FileHelper::findFiles($logsDir, [
-                'only' => ['*.log', '*.log.*', '*.txt', '*.txt.*', '*.gz'],
+                'only' => ['*.log', '*.log.*', '*.log-*', '*.txt', '*.txt.*', '*.txt-*', '*.gz'],
             ]);
 
             sort($paths);
