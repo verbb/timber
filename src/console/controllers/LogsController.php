@@ -66,6 +66,7 @@ class LogsController extends Controller
                     if (!in_array($file, $paths, true)) {
                         $process->stop();
                         unset($processes[$file]);
+                        $this->_notifyUpdate($file);
                     }
                 }
 
@@ -78,11 +79,12 @@ class LogsController extends Controller
                     $process = new Process(['tail', '-n0', '-F', $file]);
                     $process->setTimeout(null);
                     $process->start(function(string $type, string $data) use ($file): void {
-                        if ($type === Process::OUT) {
-                            $this->_notifyUpdate($file);
-                        } else {
+                        if ($type === Process::ERR) {
                             $this->stderr(trim($data) . PHP_EOL, Console::FG_GREY);
                         }
+
+                        // Tail reports truncation and replacement diagnostics on stderr.
+                        $this->_notifyUpdate($file);
                     });
                     $processes[$file] = $process;
 
