@@ -685,7 +685,7 @@
         min-width: 0;
     }
 
-    /* File picker: filename is the only thing that matters on a narrow screen. */
+    /* Selected-file actions remain available in the Settings menu on narrow screens. */
     .ti-file-combobox > .ti-file-size {
         display: none;
     }
@@ -694,9 +694,10 @@
         display: none;
     }
 
-    /* Drop the muted `@storage/logs/` prefix — show just the filename. */
-    .ti-file-combobox pk-option .ti-file-name span {
-        display: none;
+    /* Preserve directories so matching basenames remain distinguishable. */
+    .ti-file-combobox pk-option .ti-file-name {
+        white-space: normal;
+        overflow-wrap: anywhere;
     }
 }
 

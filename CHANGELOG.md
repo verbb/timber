@@ -32,6 +32,7 @@
 - Reject WebSocket ports outside the valid range.
 - Restore live-update connections to the PHP socket server and show update notifications for empty logs without reporting an inaccurate entry count.
 - Allow file-specific view permissions to be saved without granting access to every log.
+- Keep per-file download and delete actions accessible from the Settings menu on mobile and by keyboard, and preserve directory labels on narrow screens.
 - Apply site translations to log controls and pagination.
 - Allow log details to be expanded and collapsed with the keyboard, retaining focus after each action.
 - Preserve multiline messages and stack traces when parsing log strings.

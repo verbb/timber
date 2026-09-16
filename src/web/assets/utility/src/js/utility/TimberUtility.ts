@@ -366,7 +366,11 @@ export class TimberUtility {
                 const detail = (event as CustomEvent).detail as { value?: string } | undefined;
                 const value = detail?.value;
 
-                if (value === 'download-all') {
+                if (value === 'download' && this.logFile) {
+                    this.downloadLog(this.logFile);
+                } else if (value === 'delete' && this.logFile) {
+                    void this.deleteLog(this.logFile);
+                } else if (value === 'download-all') {
                     this.downloadAllLogs();
                 } else if (value === 'delete-all') {
                     this.deleteAllLogs();
@@ -385,6 +389,10 @@ export class TimberUtility {
         this.fileCombobox.value = this.logFile ?? '';
         this.fileSize.textContent = info.size ? getPrettySize(info.size) : '';
         this.fileSize.hidden = !info.size;
+
+        this.settingsMenu?.querySelectorAll('[data-single-log-action]').forEach((item) => {
+            item.toggleAttribute('disabled', !this.logFile || this.deleteLoading === this.logFile);
+        });
 
         this.filtersRow.hidden = !this.logFile;
         this.fileRow.querySelector('.ti-button-refresh')?.toggleAttribute('hidden', !this.logFile);
@@ -487,6 +495,13 @@ export class TimberUtility {
         }
 
         if (this.settings.canDownload) {
+            const download = document.createElement('pk-dropdown-item');
+            download.value = 'download';
+            download.setAttribute('data-single-log-action', '');
+            download.toggleAttribute('disabled', !this.logFile);
+            download.innerHTML = `<pk-icon slot="start" icon="download"></pk-icon>${escapeHtml(Craft.t('timber', 'Download selected log'))}`;
+            this.settingsMenu.appendChild(download);
+
             const downloadAll = document.createElement('pk-dropdown-item');
             downloadAll.value = 'download-all';
             downloadAll.innerHTML = `<pk-icon slot="start" icon="download"></pk-icon>${escapeHtml(Craft.t('timber', 'Download all logs'))}`;
@@ -498,6 +513,14 @@ export class TimberUtility {
         }
 
         if (this.settings.canDelete) {
+            const del = document.createElement('pk-dropdown-item');
+            del.value = 'delete';
+            del.setAttribute('data-single-log-action', '');
+            del.setAttribute('destructive', '');
+            del.toggleAttribute('disabled', !this.logFile);
+            del.innerHTML = `<pk-icon slot="start" icon="xmark"></pk-icon>${escapeHtml(Craft.t('timber', 'Delete selected log'))}`;
+            this.settingsMenu.appendChild(del);
+
             const deleteAll = document.createElement('pk-dropdown-item');
             deleteAll.value = 'delete-all';
             deleteAll.setAttribute('destructive', '');
@@ -856,6 +879,7 @@ export class TimberUtility {
         }
 
         this.deleteLoading = file;
+        this.syncFileTrigger();
         this.rebuildFileOptions();
 
         try {
@@ -880,6 +904,7 @@ export class TimberUtility {
             this.renderBody();
         } finally {
             this.deleteLoading = '';
+            this.syncFileTrigger();
             this.rebuildFileOptions();
         }
     }
