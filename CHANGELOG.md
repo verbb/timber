@@ -35,6 +35,7 @@
 - Preserve directory names in the log picker so files with matching names remain distinguishable.
 - Keep identical and similar log entries independently expandable.
 - Show custom parser context in expanded log details.
+- Parse IPv4 and IPv6 request prefixes in legacy Yii and Craft logs.
 - Separate native PHP error entries and sort their timestamps correctly across month boundaries.
 - Preserve files with matching names from different directories in downloaded log archives.
 - Report unreadable log files as errors instead of empty results or downloads.

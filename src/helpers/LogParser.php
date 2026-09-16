@@ -22,7 +22,7 @@ class LogParser
     public const EVENT_MODIFY_LOG_PARSERS = 'modifyLogParsers';
 
     /** Bump when built-in parser rules change so parsed-log caches invalidate. */
-    public const VERSION = '4';
+    public const VERSION = '5';
 
     private const ENTRY_FIELDS = ['datetime', 'channel', 'level', 'category', 'message', 'context'];
 
@@ -145,7 +145,7 @@ class LogParser
             ),
             // Craft 3 / Yii — extra bracket groups before level + category
             self::parser(
-                '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(?P<param1>-|\w+)\]\[(?P<param2>-|\w+)\]\[(?P<param3>-|\w+)\]\[(?P<level>-|\w+)\]\[(?P<category>.*?)\] (?P<message>.*)/s',
+                '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(?P<param1>[^\]\r\n]*)\]\[(?P<param2>[^\]\r\n]*)\]\[(?P<param3>[^\]\r\n]*)\]\[(?P<level>-|\w+)\]\[(?P<category>.*?)\] (?P<message>.*)/s',
                 ['datetime', 'level', 'category', 'message'],
             ),
             // Monolog — [2024-01-15T10:30:45+00:00] channel.INFO: message

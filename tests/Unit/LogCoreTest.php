@@ -37,6 +37,13 @@ describe('LogFiles stem', function() {
 });
 
 describe('LogParser', function() {
+    it('parses ordinary Yii web prefixes with IPv4 and IPv6 addresses', function(string $address) {
+        $entry = LogParser::parseEntry("2026-09-17 09:00:00 [$address][1][session-id][error][application] Ordinary web error\n", '/logs/legacy.log');
+        expect($entry['level'])->toBe('error');
+        expect($entry['category'])->toBe('application');
+        expect($entry['message'])->toBe("Ordinary web error\n");
+    })->with(['127.0.0.1', '::1', '-']);
+
     it('parses common Craft and third-party formats', function() {
         $defaultLog = '/storage/logs/web-2026-08-19.log';
 
