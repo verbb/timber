@@ -145,6 +145,24 @@ describe('LogFiles canView', function() {
 });
 
 describe('Service cache invalidation', function() {
+    it('sees a same-second rewrite between the sampled head and tail', function() {
+        $service = new Service();
+        $file = tempnam(sys_get_temp_dir(), 'timber-middle-');
+        $edge = "2026-09-16 08:00:00 [INFO] " . str_repeat('x', 600) . "\n";
+        $before = $edge . "2026-09-16 08:00:01 [INFO] OLD middle\n" . $edge;
+        $after = str_replace('OLD middle', 'NEW middle', $before);
+        file_put_contents($file, $before);
+        $mtime = filemtime($file);
+        try {
+            expect($service->getLogs($file)->all()[1]['message'])->toContain('OLD middle');
+            file_put_contents($file, $after);
+            touch($file, $mtime);
+            expect($service->getLogs($file)->all()[1]['message'])->toContain('NEW middle');
+        } finally {
+            unlink($file);
+        }
+    });
+
     it('invalidates when same-size content is replaced', function() {
         $service = new Service();
         $file = tempnam(sys_get_temp_dir(), 'timber-log-');

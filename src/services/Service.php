@@ -26,9 +26,13 @@ class Service extends Component
             . $maxBytes
         );
 
-        $logs = Craft::$app->getCache()->getOrSet($cacheKey, function() use ($logFile, $maxBytes) {
-            return $this->readLogFile($logFile, $maxBytes);
-        });
+        // Filesystem timestamps have second precision. Wait until both timestamps are
+        // stable before caching, so rapid same-size edits cannot reuse an earlier parse.
+        $modified = max(@filemtime($logFile) ?: 0, @filectime($logFile) ?: 0);
+        $read = fn() => $this->readLogFile($logFile, $maxBytes);
+        $logs = $modified >= time() - 1
+            ? $read()
+            : Craft::$app->getCache()->getOrSet($cacheKey, $read);
 
         if (!is_array($logs)) {
             $logs = [];
@@ -164,14 +168,16 @@ class Service extends Component
     // =========================================================================
 
     /**
-     * Identity for cache keys when path + size alone are ambiguous (same-size rewrite
-     * within the same mtime second). Samples head/tail rather than hashing the whole file.
+     * Identity for stable-file cache keys, including replacement and metadata changes.
+     * Samples head/tail rather than hashing the whole file.
      */
     private function _fileGenerationToken(string $logFile): string
     {
         clearstatcache(true, $logFile);
         $size = @filesize($logFile) ?: 0;
         $mtime = @filemtime($logFile) ?: 0;
+        $ctime = @filectime($logFile) ?: 0;
+        $inode = @fileinode($logFile) ?: 0;
         $sample = '';
 
         if ($size > 0 && ($fh = @fopen($logFile, 'rb'))) {
@@ -185,6 +191,6 @@ class Service extends Component
             fclose($fh);
         }
 
-        return $mtime . ':' . $size . ':' . md5($sample);
+        return $mtime . ':' . $ctime . ':' . $inode . ':' . $size . ':' . md5($sample);
     }
 }
