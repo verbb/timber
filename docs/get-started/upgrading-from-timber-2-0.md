@@ -4,7 +4,7 @@ Review log access before deploying the update. Timber 2.0 grants file viewing th
 
 ## Log-Viewing Permissions
 
-After updating, visit **Settings → Users → User Groups** for each group that uses Timber. Keep access to the Logs utility enabled, then grant **View all log files** to preserve access to every configured log, including files created later. To limit a group, leave that permission unchecked and grant the nested permissions for the required file stems instead.
+After updating, visit **Settings → Users → User Groups** for each group that uses Timber. Keep access to the Logs utility enabled, then grant **View all log files** to preserve access to every configured log, including files created later. To limit a group, leave that permission unchecked and grant the file-specific permissions for the required file stems instead.
 
 A group with no file-view permission sees no log files. Download and delete permissions remain separate and only apply to files the user can view. Site-wide include/exclude settings also apply to administrators.
 

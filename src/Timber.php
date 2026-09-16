@@ -101,9 +101,9 @@ class Timber extends Plugin
                 'permissions' => [
                     'timber-viewLogs' => [
                         'label' => Craft::t('timber', 'View all log files'),
-                        'info' => Craft::t('timber', 'Includes log files created later. Leave this unchecked and enable specific files below to restrict a user group.'),
-                        'nested' => $nested,
+                        'info' => Craft::t('timber', 'Includes log files created later. Leave this unchecked and enable specific files to restrict a user group.'),
                     ],
+                ] + $nested + [
                     'timber-download' => ['label' => Craft::t('timber', 'Download logs')],
                     'timber-delete' => ['label' => Craft::t('timber', 'Delete logs')],
                 ],

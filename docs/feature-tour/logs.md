@@ -33,12 +33,12 @@ Real-time watching is limited to active `.log` files; see [Real-Time Logs](docs:
 
 ## Permissions
 
-Timber provides User permissions for certain features. Non-admin users need access to the Logs utility and either **View all log files** or a nested log-file permission to view logs. You can also control who can download or delete log files with separate permissions.
+Timber provides User permissions for certain features. Non-admin users need access to the Logs utility and either **View all log files** or a file-specific log permission to view logs. You can also control who can download or delete log files with separate permissions.
 
-To restrict **which** log files a user group can see, leave **View all log files** unchecked and enable the nested permissions for specific files (`web`, `queue`, `phperrors`, and any plugin logs currently on disk). Dated files like `web-2026-08-19.log` are grouped under `web`. Users with **View all log files** continue to see new log files as they appear.
+To restrict **which** log files a user group can see, leave **View all log files** unchecked and enable the file-specific permissions for specific files (`web`, `queue`, `phperrors`, and any plugin logs currently on disk). Dated files like `web-2026-08-19.log` are grouped under `web`. Users with **View all log files** continue to see new log files as they appear.
 
 :::warning
-A non-admin user with neither **View all log files** nor a nested log-file permission cannot see any logs, even when they have access to the Logs utility. Grant only the file permissions the group needs.
+A non-admin user with neither **View all log files** nor a file-specific log permission cannot see any logs, even when they have access to the Logs utility. Grant only the file permissions the group needs.
 :::
 
 You can also limit the catalogue for the whole site via `includedLogFiles` / `excludedLogFiles` in `config/timber.php` (or Settings → Timber). Config applies first; user permissions then filter further. Download all / delete all only affect files the user is allowed to see.
