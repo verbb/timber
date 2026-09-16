@@ -174,3 +174,17 @@ describe('Realtime payload contract', function() {
             ->toBe(['file' => '/storage/logs/web.log']);
     });
 });
+
+describe('Multiline string parsing', function() {
+    it('preserves stack trace line breaks and matches file parsing', function() {
+        $data = "2026-09-16 08:00:00 [web.ERROR] [app] First line\n#0 stack frame\n#1 another frame\n2026-09-16 08:01:00 [INFO] Last line";
+        $file = tempnam(sys_get_temp_dir(), 'timber-multiline-');
+        file_put_contents($file, $data);
+        try {
+            $service = new Service();
+            expect($service->getLogsFromString($file, $data))->toBe($service->getLogs($file)->all());
+        } finally {
+            unlink($file);
+        }
+    });
+});

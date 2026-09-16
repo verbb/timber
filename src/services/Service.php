@@ -43,7 +43,7 @@ class Service extends Component
         $key = -1;
         $lineStart = LogParser::lineStartPattern($logFile);
 
-        foreach (explode(PHP_EOL, $data) as $line) {
+        foreach (preg_split('/(?<=\n)/', $data, -1, PREG_SPLIT_NO_EMPTY) as $line) {
             if (preg_match($lineStart, $line)) {
                 $key++;
                 $logs[$key] = $line;
