@@ -90,7 +90,13 @@ export class TimberUtility {
     }, 800);
 
     private readonly onSearchInput = debounce(() => {
-        this.search = (this.searchInput as HTMLElement & { value?: string }).value ?? '';
+        const search = (this.searchInput as HTMLElement & { value?: string }).value ?? '';
+
+        if (search === this.search) {
+            return;
+        }
+
+        this.search = search;
         void this.fetchLog();
     }, 800);
 

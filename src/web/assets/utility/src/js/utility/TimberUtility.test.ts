@@ -18,6 +18,41 @@ afterEach(() => {
     vi.useRealTimers();
 });
 
+const bindSearchInput = (utility: TimberUtility) => {
+    const input = Object.assign(new EventTarget(), { value: '' });
+    Object.assign(utility, {
+        searchInput: input, levelMenu: new EventTarget(), categoryMenu: new EventTarget(),
+        fileCombobox: new EventTarget(),
+    });
+    utility['bindEvents']();
+    return input;
+};
+
+it('loads cleared search only once when the input emits both clear and input events', async () => {
+    vi.useFakeTimers();
+    const { utility, request } = makeUtility({ logs: [{ message: 'Result' }] });
+    Object.assign(utility, { search: 'old term', searchText: 'old term' });
+    const input = bindSearchInput(utility);
+    input.dispatchEvent(new Event('pk-clear'));
+    input.dispatchEvent(new Event('input'));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(request.mock.lastCall?.[2].data.search).toBe('');
+});
+
+it('loads changed search text without repeating unchanged input requests', async () => {
+    vi.useFakeTimers();
+    const { utility, request } = makeUtility({ logs: [{ message: 'Result' }] });
+    const input = bindSearchInput(utility);
+    input.value = 'new term';
+    input.dispatchEvent(new Event('input'));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(request.mock.lastCall?.[2].data.search).toBe('new term');
+    input.dispatchEvent(new Event('input'));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(request).toHaveBeenCalledTimes(1);
+});
+
 describe('Log filter requests', () => {
     it('keeps missing level and category filters unrestricted after the first raw-log load', async () => {
         const { utility, request } = makeUtility({ logs: [{ message: 'Raw message' }], info: {}, supportsLevel: false, supportsCategory: false });
