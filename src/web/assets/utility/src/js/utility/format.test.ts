@@ -13,3 +13,11 @@ describe('log formatting', () => {
             .toBe('<span>@storage/logs/</span>&lt;script&gt;.log');
     });
 });
+
+it('highlights displayed characters without splitting HTML entities', () => {
+    expect(markSearchHits('A &amp; B &lt;tag&gt;', '&'))
+        .toBe('A <mark>&amp;</mark> B &lt;tag&gt;');
+    expect(markSearchHits('A &amp; B &lt;tag&gt;', '<tag>'))
+        .toBe('A &amp; B <mark>&lt;tag&gt;</mark>');
+    expect(markSearchHits('A &amp; B', 'amp')).toBe('A &amp; B');
+});

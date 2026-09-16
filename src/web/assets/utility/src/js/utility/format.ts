@@ -70,9 +70,21 @@ export const markSearchHits = (message: string, searchText: string): string => {
         return message;
     }
 
+    // Undo exactly the entities emitted by PHP's htmlspecialchars, then escape each
+    // output segment. Matching inside an encoded entity corrupts the visible message.
+    const entities: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', '#039': "'" };
+    const text = message.replace(/&(amp|lt|gt|quot|#039);/g, (_, name: string) => entities[name]);
     const escapedSearch = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let result = '';
+    let offset = 0;
 
-    return message.replace(new RegExp(escapedSearch, 'gi'), '<mark>$&</mark>');
+    for (const match of text.matchAll(new RegExp(escapedSearch, 'gi'))) {
+        result += escapeHtml(text.slice(offset, match.index));
+        result += `<mark>${escapeHtml(match[0])}</mark>`;
+        offset = match.index + match[0].length;
+    }
+
+    return result + escapeHtml(text.slice(offset));
 };
 
 export const escapeHtml = (value: string): string => {

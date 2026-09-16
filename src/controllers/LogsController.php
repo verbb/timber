@@ -63,10 +63,6 @@ class LogsController extends Controller
         $logQuery = Timber::$plugin->getService()->getLogs($logFile);
         $logQuery->orderBy($orderBy);
 
-        if ($search) {
-            $logQuery->andFilterWhere(['like', 'message', $search]);
-        }
-
         // Parse/filter/sort once from the cached bounded window. The previous query
         // pipeline rescanned the entire in-memory log set for facets, count and page.
         $matchingLogs = $logQuery->all();
@@ -81,6 +77,12 @@ class LogsController extends Controller
         $categories = is_array($categories) ? $categories : null;
 
         foreach ($matchingLogs as $log) {
+            // The parser stores escaped HTML; users search the text they actually see.
+            if (is_string($search) && $search !== ''
+                && mb_stripos(htmlspecialchars_decode($log['message'], ENT_QUOTES), $search) === false) {
+                continue;
+            }
+
             $level = $log['level'] ?? null;
             $supportsLevel = $supportsLevel || (bool)$level;
 

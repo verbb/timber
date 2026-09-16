@@ -26,3 +26,24 @@ it('distinguishes unrestricted, empty and literal null category filters', functi
         $catalog->setValue(null, null);
     }
 });
+
+it('searches literal displayed messages including zero and escaped characters', function() {
+    $file = Craft::getAlias('@storage/logs') . '/audit-search.log';
+    file_put_contents($file, "2026-09-16 08:00:00 [web.INFO] [app] zero 0 and <tag> & value\n2026-09-16 08:01:00 [INFO] another message\n");
+    $catalog = new ReflectionProperty(LogFiles::class, 'allFiles');
+    $catalog->setValue(null, null);
+    try {
+        AdminUser::login();
+        foreach (['0', '<tag>', '& value'] as $search) {
+            CpRequestContext::activate('actions/timber/logs/index', 'POST', true);
+            Craft::$app->getRequest()->setBodyParams(['file' => $file, 'search' => $search]);
+            $controller = new LogsController('logs', Timber::$plugin);
+            $controller->enableCsrfValidation = false;
+            $response = $controller->runAction('index');
+            expect($response->data['pagination']['totalCount'])->toBe(1);
+        }
+    } finally {
+        unlink($file);
+        $catalog->setValue(null, null);
+    }
+});

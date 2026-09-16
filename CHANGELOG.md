@@ -27,7 +27,7 @@
 - Stream bounded “Download all” archives from disk and remove their temporary ZIP files after sending.
 - Scan each bounded log window once when calculating filters and pagination.
 - Keep level/category filters available when parsed and raw entries are mixed, and report empty pagination ranges accurately.
-- Treat log searches as literal text so invalid or pathological regular expressions cannot break the viewer.
+- Treat log searches as literal displayed text, including `0` and escaped characters, and preserve message formatting when highlighting results.
 - Keep Yii exception-chain lines (`[previous exception]`, stack traces) attached to the parent ERROR entry instead of splitting them into fake rows.
 
 ## 2.0.4 - 2025-11-06
