@@ -20,7 +20,7 @@ class LogParser
     public const EVENT_MODIFY_LOG_PARSERS = 'modifyLogParsers';
 
     /** Bump when built-in parser rules change so parsed-log caches invalidate. */
-    public const VERSION = '6';
+    public const VERSION = '7';
 
     private const ENTRY_FIELDS = ['datetime', 'channel', 'level', 'category', 'message', 'context'];
 
@@ -217,7 +217,11 @@ class LogParser
 
         foreach ($fields as $field) {
             if (isset($matches[$field])) {
-                $entry[$field] = $matches[$field];
+                $value = $matches[$field];
+                // Normalize before facets and filtering so browser labels match server values.
+                $entry[$field] = mb_check_encoding($value, 'UTF-8')
+                    ? $value
+                    : json_decode(json_encode($value, JSON_INVALID_UTF8_SUBSTITUTE));
             }
         }
 
