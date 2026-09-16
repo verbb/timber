@@ -17,12 +17,15 @@ it('downloads every visible file when different directories share a filename', f
     $settings = Timber::$plugin->getSettings();
     $included = $settings->includedLogFiles;
     $settings->includedLogFiles = ['same'];
+    $bufferLevel = ob_get_level();
 
     try {
         AdminUser::login();
         CpRequestContext::activate('actions/timber/logs/download-all', 'POST', true);
         $controller = new LogsController('logs', Timber::$plugin);
         $controller->enableCsrfValidation = false;
+        // Craft clears one buffer before a download; give it one owned by this test.
+        ob_start();
         $response = $controller->runAction('download-all');
         $stream = $response->stream;
         $path = stream_get_meta_data(is_array($stream) ? $stream[0] : $stream)['uri'];
@@ -35,6 +38,9 @@ it('downloads every visible file when different directories share a filename', f
         $zip->close();
         expect($contents)->toHaveCount(2)->toContain('first file', 'second file');
     } finally {
+        while (ob_get_level() > $bufferLevel) {
+            ob_end_clean();
+        }
         $settings->includedLogFiles = $included;
         $catalog->setValue(null, null);
         craft\helpers\FileHelper::removeDirectory($directory);
