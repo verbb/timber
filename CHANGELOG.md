@@ -20,6 +20,7 @@
 - Clarify log-reading limits, configuration, and log access in the documentation.
 
 ### Fixed
+- Continue live updates when log files are replaced or new daily files appear.
 - Retain complete log entries at the exact start of a bounded read window.
 - Include uncompressed dated rotations such as `web.log-20260916` in the log catalogue.
 - Reject WebSocket ports outside the valid range.

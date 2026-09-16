@@ -52,8 +52,13 @@ class LogFiles
         return pathinfo($filename, PATHINFO_FILENAME);
     }
 
-    public static function findAll(): array
+    public static function findAll(bool $refresh = false): array
     {
+        if ($refresh) {
+            self::$allFiles = null;
+            clearstatcache();
+        }
+
         if (self::$allFiles !== null) {
             return self::$allFiles;
         }
@@ -97,11 +102,11 @@ class LogFiles
     /**
      * Active `.log` files suitable for `tail -f` realtime updates (not rotations or gzip).
      */
-    public static function watchablePaths(): array
+    public static function watchablePaths(bool $refresh = false): array
     {
         $paths = [];
 
-        foreach (self::findAll() as $file) {
+        foreach (self::findAll($refresh) as $file) {
             $basename = basename($file['path']);
 
             if ($file['compressed']) {

@@ -26,13 +26,13 @@ These command-line tasks continue to watch and push changes. Run them under your
 
 ### Watching Log Files
 
-First, watch log files for changes with `tail -f` streamed into Timber:
+First, watch log files for changes with `tail -F` streamed into Timber:
 
 ```shell
 ./craft timber/logs/watch
 ```
 
-This creates a long-lived process that continually checks for updates to watchable log files. It outputs errors and updates found, and runs until you terminate it.
+This creates a long-lived process that continually checks for updates to watchable log files. It follows replaced files and checks the catalogue every second for new daily logs. It outputs errors and updates found, and runs until you terminate it.
 
 ### Socket.IO Server
 

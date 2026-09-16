@@ -2,7 +2,6 @@
 namespace verbb\timber\console\controllers;
 
 use verbb\timber\Timber;
-use verbb\timber\console\ProcessRun;
 use verbb\timber\helpers\LogFiles;
 use verbb\timber\models\Settings;
 
@@ -12,13 +11,10 @@ use craft\helpers\Console;
 
 use yii\console\ExitCode;
 
-use Exception;
 use Throwable;
 
 use Channel\Server;
 use Emitter;
-use Graze\ParallelProcess\Event\RunEvent;
-use Graze\ParallelProcess\Pool;
 use PHPSocketIO\ChannelAdapter;
 use PHPSocketIO\SocketIO;
 use Symfony\Component\Process\Process;
@@ -58,58 +54,82 @@ class LogsController extends Controller
      */
     public function actionWatch(): int
     {
-        // Watch active log files for changes, in parallel (not gzip or numbered rotations).
-        $logFiles = LogFiles::watchablePaths();
+        $processes = [];
+        $initialScan = true;
 
-        $pool = new Pool();
+        try {
+            while (true) {
+                $paths = LogFiles::watchablePaths(true);
 
-        // Use `tail -n0 -f` to stream changes to us. Process for each watch command
-        foreach ($logFiles as $file) {
-            $command = ['tail', '-n0', '-f', $file];
-
-            $pool->add(new ProcessRun(new Process($command), ['file' => $file]));
-        }
-
-        // Add event triggers for each task to process the log content and ping the update
-        // to our event emitter to pass to the front-end with socket.io.
-        foreach ($pool->getAll() as $run) {
-            $run->addListener(RunEvent::UPDATED, function (RunEvent $event) {
-                try {
-                    $run = $event->getRun();
-                    $file = $run->getTags()['file'];
-                    $data = $run->getLastMessage();
-
-                    if ($run->getProcess()->getStatus() !== 'started') {
-                        throw new Exception('Unable to run process: "' . trim($data) . '"');
-                    }
-
-                    $this->stdout('[UPDATED]', Console::FG_GREEN);
-                    $this->stdout(' → ' . $file . PHP_EOL, Console::FG_GREY);
-
-                    // Invalidate only — never broadcast log bodies. Clients refetch via
-                    // the authorized timber/logs HTTP action (SEC-04).
-                    $emitter = new Emitter();
-
-                    $emitter->emit('logUpdate', $this->_invalidationPayload($file));
-                } catch (Throwable $e) {
-                    $this->stdout('[ERROR]', Console::FG_RED);
-                    $this->stdout(' → ' . $e->getMessage() . PHP_EOL, Console::FG_GREY);
-
-                    if (str_contains($e->getMessage(), 'stream_socket_client')) {
-                        exit;
+                foreach ($processes as $file => $process) {
+                    if (!in_array($file, $paths, true)) {
+                        $process->stop();
+                        unset($processes[$file]);
                     }
                 }
-            });
+
+                foreach ($paths as $file) {
+                    if (isset($processes[$file])) {
+                        continue;
+                    }
+
+                    // Follow the filename through replacement, not the old file descriptor.
+                    $process = new Process(['tail', '-n0', '-F', $file]);
+                    $process->setTimeout(null);
+                    $process->start(function(string $type, string $data) use ($file): void {
+                        if ($type === Process::OUT) {
+                            $this->_notifyUpdate($file);
+                        } else {
+                            $this->stderr(trim($data) . PHP_EOL, Console::FG_GREY);
+                        }
+                    });
+                    $processes[$file] = $process;
+
+                    // A new daily log may already contain entries before tail starts.
+                    if (!$initialScan) {
+                        $this->_notifyUpdate($file);
+                    }
+                }
+
+                $initialScan = false;
+
+                // Drain each process frequently, refreshing discovery once per second.
+                for ($tick = 0; $tick < 10; $tick++) {
+                    foreach ($processes as $file => $process) {
+                        if (!$process->isRunning()) {
+                            $this->stderr('Unable to watch ' . $file . ': ' . $process->getErrorOutput() . PHP_EOL, Console::FG_RED);
+                            return ExitCode::UNSPECIFIED_ERROR;
+                        }
+
+                        $process->clearOutput();
+                        $process->clearErrorOutput();
+                    }
+
+                    usleep(100_000);
+                }
+            }
+        } catch (Throwable $e) {
+            $this->stderr($e->getMessage() . PHP_EOL, Console::FG_RED);
+            return ExitCode::UNSPECIFIED_ERROR;
+        } finally {
+            foreach ($processes as $process) {
+                $process->stop();
+            }
         }
-
-        $pool->run();
-
-        return ExitCode::OK;
     }
 
 
     // Private Methods
     // =========================================================================
+
+    private function _notifyUpdate(string $file): void
+    {
+        $this->stdout('[UPDATED]', Console::FG_GREEN);
+        $this->stdout(' → ' . $file . PHP_EOL, Console::FG_GREY);
+
+        // Only invalidate; log bodies are fetched through the authorised HTTP action.
+        (new Emitter())->emit('logUpdate', $this->_invalidationPayload($file));
+    }
 
     /** Keep realtime messages free of log content; authorized clients refetch it. */
     private function _invalidationPayload(string $file): array
