@@ -954,9 +954,9 @@ export class TimberUtility {
             this.currentPage = 0;
         }
 
-        // Missing facets impose no restriction; an explicit empty array selects nothing.
-        const categories = this.supportsCategory ? this.categories : null;
-        const levels = this.supportsLevel ? this.levels : null;
+        // Keep explicit selections through empty searches; null alone means unrestricted.
+        const categories = this.categories;
+        const levels = this.levels;
 
         const data = {
             file: this.logFile,

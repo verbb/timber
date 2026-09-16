@@ -44,3 +44,11 @@ describe('Log filter requests', () => {
         expect(request.mock.lastCall?.[2].data).toMatchObject({ levels: [], categories: [] });
     });
 });
+
+it('preserves chosen facets through a search with no matching entries', async () => {
+    const { utility, request } = makeUtility({ logs: [], info: {}, supportsLevel: false, supportsCategory: false });
+    Object.assign(utility, { levels: ['ERROR'], categories: ['app'] });
+    await utility['fetchLog']();
+    await utility['fetchLog']();
+    expect(request.mock.lastCall?.[2].data).toMatchObject({ levels: ['ERROR'], categories: ['app'] });
+});
