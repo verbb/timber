@@ -20,6 +20,7 @@
 - Clarify log-reading limits, configuration, and log access in the documentation.
 
 ### Fixed
+- Keep raw and uncategorised entries visible when sorting, searching and changing files, and distinguish all filters from an empty selection.
 - Bound individual plain and compressed log-line reads so malformed newline-free files cannot exceed the configured memory window.
 - Stream bounded “Download all” archives from disk and remove their temporary ZIP files after sending.
 - Scan each bounded log window once when calculating filters and pagination.

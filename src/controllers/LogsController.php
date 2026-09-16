@@ -77,8 +77,8 @@ class LogsController extends Controller
             'categories' => [],
         ];
         $filteredLogs = [];
-        $levels = is_array($levels) ? $levels : [];
-        $categories = is_array($categories) ? $categories : [];
+        $levels = is_array($levels) ? $levels : null;
+        $categories = is_array($categories) ? $categories : null;
 
         foreach ($matchingLogs as $log) {
             $level = $log['level'] ?? null;
@@ -103,11 +103,11 @@ class LogsController extends Controller
                 $logInfo['categories'][$category] += 1;
             }
 
-            if ($levels && !in_array($level, $levels, true)) {
+            if ($levels !== null && !in_array($level, $levels, true)) {
                 continue;
             }
 
-            if ($categories && !in_array($category, $categories, true)) {
+            if ($categories !== null && !in_array($category, $categories, true)) {
                 continue;
             }
 

@@ -7,7 +7,6 @@
 import { debounce, get } from 'lodash-es';
 
 import {
-    clone,
     escapeHtml,
     formatNumber,
     getPrettyPathHtml,
@@ -46,14 +45,13 @@ export class TimberUtility {
     private readonly root: HTMLElement;
     private readonly settings: TimberSettings;
 
-    private initFilters = false;
     private currentPage = 0;
     private orderBy = 'datetime desc';
     private logFile: string | null = null;
     private searchText = '';
     private search = '';
-    private levels: string[] = [];
-    private categories: string[] = [];
+    private levels: string[] | null = null;
+    private categories: string[] | null = null;
     /** Realtime invalidation count for the current file (bodies arrive via HTTP). */
     private pendingUpdates = 0;
     /** Bumped on every fetch so out-of-order responses cannot overwrite newer UI state. */
@@ -277,7 +275,7 @@ export class TimberUtility {
     }
 
     private toggleFilterOption(type: TimberFilterType, value: string): void {
-        const selected = this[type];
+        const selected = this.selectedFilters(type);
         const index = selected.indexOf(value);
 
         if (index === -1) {
@@ -286,6 +284,7 @@ export class TimberUtility {
             selected.splice(index, 1);
         }
 
+        this[type] = selected.length === this.filterInfo(type).length ? null : selected;
         this.syncFilterMenuSelections(type);
         this.debouncedFetch();
     }
@@ -536,8 +535,13 @@ export class TimberUtility {
         });
     }
 
+    /** Null means all values, including raw entries and values appearing in later updates. */
+    private selectedFilters(type: TimberFilterType): string[] {
+        return [...(this[type] ?? Object.keys(this.logInfo[type] ?? {}))];
+    }
+
     private filterSelectText(type: TimberFilterType): string {
-        if (this[type].length !== this.filterInfo(type).length) {
+        if (this.selectedFilters(type).length !== this.filterInfo(type).length) {
             return Craft.t('timber', 'Select all');
         }
 
@@ -624,11 +628,11 @@ export class TimberUtility {
 
             // `pk-dropdown-item` supplies the keyboard contract while the custom leading
             // checkbox supplies the visual treatment, so expose the matching ARIA state.
-            row.classList.toggle('is-checked', this[type].includes(option.value));
+            row.classList.toggle('is-checked', this.selectedFilters(type).includes(option.value));
             const syncAria = (): void => {
                 row.setAttribute('role', 'menuitemcheckbox');
                 row.setAttribute('aria-label', `${option.label} ${option.count}`);
-                row.setAttribute('aria-checked', this[type].includes(option.value) ? 'true' : 'false');
+                row.setAttribute('aria-checked', this.selectedFilters(type).includes(option.value) ? 'true' : 'false');
                 row.removeAttribute('aria-expanded');
             };
             syncAria();
@@ -678,7 +682,7 @@ export class TimberUtility {
         const menu = type === 'levels' ? this.levelMenu : this.categoryMenu;
 
         for (const row of menu.querySelectorAll<HTMLElement>('.ti-filter-row')) {
-            const checked = this[type].includes(row.dataset.value ?? '');
+            const checked = this.selectedFilters(type).includes(row.dataset.value ?? '');
             row.classList.toggle('is-checked', checked);
             row.setAttribute('aria-checked', checked ? 'true' : 'false');
         }
@@ -688,10 +692,10 @@ export class TimberUtility {
 
     private filterSelectAll(type: TimberFilterType): void {
         const options = this.filterInfo(type);
-        const action = this[type].length !== options.length ? 'add' : 'remove';
+        const action = this.selectedFilters(type).length !== options.length ? 'add' : 'remove';
 
         if (action === 'add') {
-            this[type] = options.map((item) => item.value);
+            this[type] = null;
         } else {
             this[type] = [];
         }
@@ -793,7 +797,8 @@ export class TimberUtility {
     private selectLog(file: string): void {
         this.logs = [];
         this.logFile = file;
-        this.initFilters = false;
+        this.levels = null;
+        this.categories = null;
         this.pendingUpdates = 0;
         this.fetchGeneration += 1;
         this.syncFileTrigger();
@@ -840,9 +845,8 @@ export class TimberUtility {
                 this.logs = [];
                 this.logInfo = {};
                 this.pageInfo = {};
-                this.levels = [];
-                this.categories = [];
-                this.initFilters = false;
+                this.levels = null;
+                this.categories = null;
             }
 
             this.syncFileTrigger();
@@ -879,9 +883,8 @@ export class TimberUtility {
             this.logs = [];
             this.logInfo = {};
             this.pageInfo = {};
-            this.levels = [];
-            this.categories = [];
-            this.initFilters = false;
+            this.levels = null;
+            this.categories = null;
 
             this.syncFileTrigger();
             this.rebuildFileOptions();
@@ -951,17 +954,9 @@ export class TimberUtility {
             this.currentPage = 0;
         }
 
-        // After initFilters, empty selection ≠ "all" — send ['null'] sentinel.
-        const categories = clone(this.categories);
-        const levels = clone(this.levels);
-
-        if (!categories.length && this.initFilters) {
-            categories.push('null');
-        }
-
-        if (!levels.length && this.initFilters) {
-            levels.push('null');
-        }
+        // Missing facets impose no restriction; an explicit empty array selects nothing.
+        const categories = this.supportsCategory ? this.categories : null;
+        const levels = this.supportsLevel ? this.levels : null;
 
         const data = {
             file: this.logFile,
@@ -992,13 +987,6 @@ export class TimberUtility {
             this.pageInfo = (response.data.pagination || {}) as TimberPageInfo;
             this.supportsLevel = Boolean(response.data.supportsLevel);
             this.supportsCategory = Boolean(response.data.supportsCategory);
-
-            // First successful fetch: select every level/category.
-            if (!this.initFilters) {
-                this.levels = Object.keys(this.logInfo.levels || {});
-                this.categories = Object.keys(this.logInfo.categories || {});
-                this.initFilters = true;
-            }
 
             this.syncFilterVisibility();
             this.scheduleFilterMenuRebuild('levels');
