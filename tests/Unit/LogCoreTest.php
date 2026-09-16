@@ -215,7 +215,7 @@ describe('Multiline string parsing', function() {
             $logs = $service->getLogsFromString($file, $data);
             expect($logs)->toHaveCount(2);
             expect($logs[0]['message'])->toContain('[previous exception] Continued');
-            expect($logs[0]['datetime'])->toBe('2026-01-31 23:59:00');
+            expect($logs[0]['datetime'])->toBe('31-Jan-2026 23:59:00 UTC');
             expect($logs)->toBe($service->getLogs($file)->all());
             expect($service->getLogs($file)->orderBy('datetime desc')->all()[0]['message'])->toContain('Second warning');
         } finally {

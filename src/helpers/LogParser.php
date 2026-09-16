@@ -7,8 +7,6 @@ use craft\helpers\StringHelper;
 
 use yii\base\Event;
 
-use DateTimeImmutable;
-
 /**
  * Line-shape log parsers. Tried in order; unmatched entries stay visible as raw text.
  *
@@ -22,7 +20,7 @@ class LogParser
     public const EVENT_MODIFY_LOG_PARSERS = 'modifyLogParsers';
 
     /** Bump when built-in parser rules change so parsed-log caches invalidate. */
-    public const VERSION = '5';
+    public const VERSION = '6';
 
     private const ENTRY_FIELDS = ['datetime', 'channel', 'level', 'category', 'message', 'context'];
 
@@ -224,15 +222,6 @@ class LogParser
         }
 
         $entry['message'] = StringHelper::escape($entry['message']);
-
-        // PHP writes day-first dates, which otherwise sort incorrectly across months.
-        if ($entry['datetime'] && preg_match('/^\d{2}-[A-Za-z]{3}-\d{4} /', $entry['datetime'])) {
-            $date = DateTimeImmutable::createFromFormat('!d-M-Y H:i:s T', $entry['datetime']);
-
-            if ($date !== false) {
-                $entry['datetime'] = $date->format('Y-m-d H:i:s');
-            }
-        }
 
         return $entry;
     }

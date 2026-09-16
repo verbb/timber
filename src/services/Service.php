@@ -3,6 +3,7 @@ namespace verbb\timber\services;
 
 use verbb\timber\Timber;
 use verbb\timber\helpers\LogParser;
+use verbb\timber\helpers\LogQueryProcessor;
 
 use Craft;
 use craft\base\Component;
@@ -52,7 +53,7 @@ class Service extends Component
             $logs = [];
         }
 
-        return (new ArrayQuery())->from($logs);
+        return (new ArrayQuery(['queryProcessorClass' => LogQueryProcessor::class]))->from($logs);
     }
 
     public function getLogsFromString(string $logFile, string $data): array
