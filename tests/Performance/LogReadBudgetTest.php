@@ -5,6 +5,24 @@ declare(strict_types=1);
 use verbb\timber\Timber;
 use verbb\timber\services\Service;
 
+it('retains a complete first entry at the exact tail-window boundary', function() {
+    $file = tempnam(sys_get_temp_dir(), 'timber-boundary-');
+    $first = "2026-09-16 08:00:00 [INFO] First retained entry\n";
+    $last = "2026-09-16 08:01:00 [INFO] Last retained entry\n";
+    file_put_contents($file, "Older entry\n" . $first . $last);
+    $service = new class extends Service {
+        public function readWithBudget(string $path, int $bytes): array|false
+        {
+            return $this->readLogFile($path, $bytes);
+        }
+    };
+    try {
+        expect($service->readWithBudget($file, strlen($first . $last)))->toHaveCount(2);
+    } finally {
+        unlink($file);
+    }
+});
+
 it('bounds a single newline-free compressed entry before allocating it in full', function() {
     $temporaryFile = tempnam(sys_get_temp_dir(), 'timber-long-line-');
     $file = $temporaryFile . '.log.gz';

@@ -146,9 +146,11 @@ class Service extends Component
 
         // Uncompressed oversized files: parse a tail window so newest entries win.
         if ($maxBytes > 0 && $size > $maxBytes) {
-            fseek($handle, $size - $maxBytes);
-            // Discard the partial first line after the seek point.
-            fgets($handle);
+            fseek($handle, $size - $maxBytes - 1);
+            // Only discard a partial line; the window may start on a complete entry.
+            if (fread($handle, 1) !== "\n") {
+                fgets($handle);
+            }
         }
 
         return [

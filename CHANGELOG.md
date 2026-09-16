@@ -20,6 +20,7 @@
 - Clarify log-reading limits, configuration, and log access in the documentation.
 
 ### Fixed
+- Retain complete log entries at the exact start of a bounded read window.
 - Include uncompressed dated rotations such as `web.log-20260916` in the log catalogue.
 - Reject WebSocket ports outside the valid range.
 - Restore live-update connections to the PHP socket server and show update notifications for empty logs without reporting an inaccurate entry count.
