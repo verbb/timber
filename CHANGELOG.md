@@ -27,6 +27,7 @@
 - Bound dense log files to 100,000 retained entries, use small read buffers, and release raw entries during parsing to prevent excessive memory use.
 - Refresh cached log content after rapid same-size rewrites, including changes between sampled regions.
 - Continue live updates when log files are replaced or new daily files appear.
+- Preserve keyboard focus and reading state when live-update notifications arrive.
 - Retain complete log entries at the exact start of a bounded read window.
 - Preserve viewing, gzip parsing, and live watching for discovered log symlinks.
 - Include uncompressed dated rotations such as `web.log-20260916` in the log catalogue.

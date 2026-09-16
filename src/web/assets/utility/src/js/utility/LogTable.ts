@@ -42,12 +42,21 @@ export class LogTable {
     }
 
     update(props: Partial<LogTableProps>): void {
+        const changed = (Object.keys(props) as (keyof LogTableProps)[])
+            .filter((key) => props[key] !== this.props[key]);
+
         if (props.logs && props.logs !== this.props.logs) {
             this.toggledLogs.clear();
         }
 
         this.props = { ...this.props, ...props };
-        this.sync();
+
+        // Notifications leave the current reading controls and text selection in place.
+        if (changed.some((key) => key !== 'pendingUpdates')) {
+            this.sync();
+        } else if (changed.includes('pendingUpdates')) {
+            this.renderUpdatesBanner();
+        }
     }
 
     destroy(): void {
