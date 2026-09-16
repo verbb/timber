@@ -50,6 +50,7 @@ complete coverage for every supported Craft/PHP/database version. Compatibility
 matrix expansion must validate the actual runtime and fixture behavior.
 
 The test application's dependency baseline is versioned in `tests/runtime/composer.lock`.
+Dependency updates resolve against PHP 8.2 so the shared lock remains installable across the PHP 8.2, 8.3 and 8.4 release matrix. Tests still execute on the actual configured DDEV PHP version.
 Use `ddev test --update-lock` when intentionally updating that baseline, and review
 the lock diff alongside the test results. This does not update the plugin's root lock.
 JUnit results are available in `.cache/verbb-tests/junit.xml`. Tests exceeding 60 seconds
