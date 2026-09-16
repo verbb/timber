@@ -9,8 +9,16 @@ use craft\base\Component;
 
 use yii2mod\query\ArrayQuery;
 
+use SplQueue;
+
 class Service extends Component
 {
+    // Constants
+    // =========================================================================
+
+    private const MAX_PARSED_ENTRIES = 100_000;
+
+
     // Public Methods
     // =========================================================================
 
@@ -19,7 +27,7 @@ class Service extends Component
         $maxBytes = Timber::$plugin?->getSettings()?->getMaxLogReadBytes() ?? 52_428_800;
 
         $cacheKey = md5(
-            LogParser::VERSION . ':'
+            LogParser::VERSION . ':' . self::MAX_PARSED_ENTRIES . ':'
             . LogParser::cacheKeySuffix($logFile) . ':'
             . $logFile . ':'
             . $this->_fileGenerationToken($logFile) . ':'
@@ -75,14 +83,13 @@ class Service extends Component
             return false;
         }
 
-        $logs = [];
-        $key = -1;
+        $entries = new SplQueue();
+        $entry = '';
         $lineStart = LogParser::lineStartPattern($logFile);
         $bytesRead = 0;
+        $compressed = str_ends_with(strtolower($logFile), '.gz');
 
         while ($bytesRead < $maxBytes) {
-            // Pass a hard read length so one malformed, newline-free entry cannot make
-            // fgets()/gzgets() allocate beyond the configured window before we reject it.
             $line = $readLine(($maxBytes - $bytesRead) + 1);
 
             if ($line === false) {
@@ -91,26 +98,43 @@ class Service extends Component
 
             $bytesRead += strlen($line);
 
-            if (preg_match($lineStart, $line)) {
-                $key++;
-                $logs[$key] = $line;
-            } elseif ($key >= 0) {
-                $logs[$key] .= $line;
-            } elseif ($line !== '') {
-                $key = 0;
-                $logs[$key] = $line;
+            if (preg_match($lineStart, $line) && $entry !== '') {
+                $entries->enqueue($entry);
+                $entry = '';
+
+                if ($entries->count() >= self::MAX_PARSED_ENTRIES) {
+                    if ($compressed) {
+                        break;
+                    }
+
+                    // Plain logs retain the newest entries in the byte window.
+                    if ($entries->count() > self::MAX_PARSED_ENTRIES) {
+                        $entries->dequeue();
+                    }
+                }
             }
+
+            $entry .= $line;
         }
 
         $close();
 
-        $logs = $this->parseLogEntries($logs, $logFile);
+        if ($entry !== '') {
+            $entries->enqueue($entry);
 
-        if (!$logs) {
-            return false;
+            if ($entries->count() > self::MAX_PARSED_ENTRIES) {
+                $entries->dequeue();
+            }
         }
 
-        return $logs;
+        $logs = [];
+
+        // Release raw entries as they are parsed instead of retaining both full arrays.
+        while (!$entries->isEmpty()) {
+            $logs[] = LogParser::parseEntry($entries->dequeue(), $logFile);
+        }
+
+        return $logs ?: false;
     }
 
     protected function parseLogEntries(array $logs, string $logFile): array

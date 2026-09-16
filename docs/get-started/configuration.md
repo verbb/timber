@@ -58,7 +58,7 @@ The maximum page size accepted from a log request. The effective ceiling cannot 
 
 **Type:** `int` · **Default:** `52428800`
 
-The maximum number of uncompressed bytes parsed from one log file. For a larger plain file, Timber reads the end of the file, showing its newest entries. For a gzip archive, Timber reads from the beginning and stops at this limit, so newer entries may be omitted. The effective minimum is 1 MiB. Download the file when you need to inspect its complete history.
+The maximum number of uncompressed bytes parsed from one log file. For a larger plain file, Timber reads the end of the file, showing its newest entries. For a gzip archive, Timber reads from the beginning and stops at this limit, so newer entries may be omitted. The effective minimum is 1 MiB. A separate ceiling of 100,000 entries per file also applies, retaining the newest entries from plain files or the oldest entries from gzip archives. Download the file when you need to inspect its complete history.
 :::
 
 ::: reference

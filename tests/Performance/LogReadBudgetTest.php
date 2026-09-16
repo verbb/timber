@@ -5,6 +5,26 @@ declare(strict_types=1);
 use verbb\timber\Timber;
 use verbb\timber\services\Service;
 
+it('bounds dense log windows while retaining the expected end of each format', function(bool $compressed) {
+    $temporary = tempnam(sys_get_temp_dir(), 'timber-dense-');
+    $file = $compressed ? $temporary . '.gz' : $temporary;
+    $handle = $compressed ? gzopen($file, 'wb') : fopen($file, 'wb');
+    for ($i = 0; $i < 100005; $i++) {
+        $line = sprintf("2026-09-16 08:00:00 [INFO] marker-%06d\n", $i);
+        $compressed ? gzwrite($handle, $line) : fwrite($handle, $line);
+    }
+    $compressed ? gzclose($handle) : fclose($handle);
+    try {
+        $logs = (new Service())->getLogs($file)->all();
+        expect($logs)->toHaveCount(100000)
+            ->and($logs[0]['message'])->toContain($compressed ? 'marker-000000' : 'marker-000005')
+            ->and($logs[99999]['message'])->toContain($compressed ? 'marker-099999' : 'marker-100004');
+    } finally {
+        unlink($file);
+        if ($compressed) unlink($temporary);
+    }
+})->with([false, true])->group('perf');
+
 it('retains a complete first entry at the exact tail-window boundary', function() {
     $file = tempnam(sys_get_temp_dir(), 'timber-boundary-');
     $first = "2026-09-16 08:00:00 [INFO] First retained entry\n";

@@ -8,7 +8,7 @@ Use `includedLogFiles` and `excludedLogFiles` for restrictions that must apply t
 
 ## Older Entries Are Missing from a Large File
 
-For an uncompressed file larger than `maxLogReadBytes`, Timber reads the end of the file. Older entries outside that window are omitted. The default window is 50 MiB.
+For an uncompressed file larger than `maxLogReadBytes`, Timber reads the end of the file. Older entries outside that window are omitted. The default window is 50 MiB. Timber also retains at most 100,000 entries per file, keeping the newest entries from plain logs or the oldest entries from gzip archives.
 
 Compressed `.gz` files are read from the beginning until the same uncompressed byte budget is reached. In a large archive, it is the newer entries that may be missing. Download the file and inspect its full history with server-side tools. Increase the byte budget only after considering request time and memory, then reload the file and check the timestamps covered by the results.
 
