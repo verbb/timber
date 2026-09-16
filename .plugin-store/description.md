@@ -6,7 +6,7 @@ Timber is a Craft CMS plugin for viewing application logs in the control panel. 
     - Filter logs by level or category.
     - Full-text search for log message.
     - Order by date, level, category or message.
-- Real-time logs pushed seamlessly using command line utilities. Sit there and watch your log entries come through in real-time, as soon as they're created!
+- Receive real-time update notifications for the log you’re viewing using command-line processes. Click the notification to reload its latest entries.
 - Highly performant and low memory usage, even for 1GB+ files.
 - Download a single log file, or download all as a `zip` file.
 - Delete a single log file, or delete all.
