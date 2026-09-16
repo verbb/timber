@@ -338,13 +338,13 @@ export class LogTable {
 
         const nav = document.createElement('nav');
         nav.className = 'flex';
-        nav.setAttribute('aria-label', 'entry pagination');
+        nav.setAttribute('aria-label', Craft.t('timber', 'Entry pagination'));
 
         const prev = document.createElement('button');
         prev.type = 'button';
         prev.className = `page-link prev-page${canPrev ? '' : ' disabled'}`;
         prev.disabled = !canPrev;
-        prev.title = 'Previous Page';
+        prev.title = Craft.t('timber', 'Previous Page');
         prev.addEventListener('click', (event) => {
             event.preventDefault();
             if (canPrev) {
@@ -356,7 +356,7 @@ export class LogTable {
         next.type = 'button';
         next.className = `page-link next-page${canNext ? '' : ' disabled'}`;
         next.disabled = !canNext;
-        next.title = 'Next Page';
+        next.title = Craft.t('timber', 'Next Page');
         next.addEventListener('click', (event) => {
             event.preventDefault();
             if (canNext) {
@@ -368,7 +368,11 @@ export class LogTable {
 
         const info = document.createElement('div');
         info.className = 'page-info';
-        info.textContent = `${formatNumber(min)}-${formatNumber(max)} of ${formatNumber(totalCount)} entries`;
+        info.textContent = Craft.t('timber', '{min}-{max} of {total} entries', {
+            min: formatNumber(min),
+            max: formatNumber(max),
+            total: formatNumber(totalCount),
+        });
 
         flex.append(nav, info);
         container.appendChild(flex);
