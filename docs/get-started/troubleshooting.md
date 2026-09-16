@@ -2,7 +2,7 @@
 
 ## A User Can See More Logs Than Expected
 
-Remove **View all log files**, then grant at least one nested log-file permission to restrict the user group to those stems. A user with neither permission receives access to every file that passes site-wide configuration. Remove access to the Logs utility when the group should see no logs.
+Remove **View all log files**, then grant at least one nested log-file permission to restrict the user group to those stems. A non-admin user with neither permission cannot see any logs. Access to the Logs utility alone does not grant access to its files.
 
 Use `includedLogFiles` and `excludedLogFiles` for restrictions that must apply to everyone. Dated and rotated files inherit the permission of their base stem, such as `web`.
 

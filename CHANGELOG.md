@@ -10,6 +10,7 @@
 - Add a `modifyLogParsers` event so modules can register custom line parsers and line-start patterns per log file.
 
 ### Changed
+- Non-admin users require an explicit log-view permission as well as access to the Logs utility. Review user groups when upgrading; see [Upgrading from Timber 2.0](https://verbb.io/craft-plugins/timber/docs/get-started/upgrading-from-timber-2-0).
 - Load Socket.IO only when realtime updates are enabled, and update frontend dependencies to their patched releases.
 - Clarified optional PHP configuration with focused examples and linkable setting details.
 - Rebuild the Logs utility UI on [Plugin Kit](https://docs.verbb.io/plugin-kit/web/) (web components). Existing log viewing, filtering, search, pagination, download/delete, and real-time updates are preserved.
