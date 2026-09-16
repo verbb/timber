@@ -53,7 +53,7 @@ The following limits keep viewing and downloading logs manageable:
 
 - Log files are read line by line rather than loaded entirely into memory.
 - At most 100,000 entries are retained per file: the newest entries for plain logs, or the oldest entries for gzip archives.
-- Parsed data is cached until the file changes.
+- Parsed windows up to 8 MiB are cached until the file changes. Larger windows are read directly to avoid duplicating their parsed data in memory. For gzip archives, cache eligibility uses `maxLogReadBytes` because compressed file size does not indicate the size of the parsed data.
 - Results are paginated, with a configurable page size and an independent maximum.
 - An uncompressed file larger than `maxLogReadBytes` is parsed from a tail window instead of from its beginning. The default window is 50 MiB.
 - Download all is limited to 250 visible files and 1 GiB of source data per archive.

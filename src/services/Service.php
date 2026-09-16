@@ -18,6 +18,7 @@ class Service extends Component
     // =========================================================================
 
     private const MAX_PARSED_ENTRIES = 100_000;
+    private const MAX_CACHED_READ_BYTES = 8_388_608;
 
 
     // Public Methods
@@ -39,7 +40,11 @@ class Service extends Component
         // stable before caching, so rapid same-size edits cannot reuse an earlier parse.
         $modified = max(@filemtime($logFile) ?: 0, @filectime($logFile) ?: 0);
         $read = fn() => $this->readLogFile($logFile, $maxBytes);
-        $logs = $modified >= time() - 1
+        $readBytes = str_ends_with(strtolower($logFile), '.gz') ? $maxBytes : min(@filesize($logFile) ?: 0, $maxBytes);
+
+        // Cache serialization duplicates the parsed window in memory. Large windows
+        // are read directly; gzip eligibility uses its uncompressed read budget.
+        $logs = $readBytes > self::MAX_CACHED_READ_BYTES || $modified >= time() - 1
             ? $read()
             : Craft::$app->getCache()->getOrSet($cacheKey, $read);
 
@@ -114,7 +119,7 @@ class Service extends Component
             $bytesRead += strlen($line);
 
             if (preg_match($lineStart, $line) && $entry !== '') {
-                $entries->enqueue($entry);
+                $entries->enqueue(LogParser::parseEntry($entry, $logFile));
                 $entry = '';
 
                 if ($entries->count() >= self::MAX_PARSED_ENTRIES) {
@@ -135,7 +140,7 @@ class Service extends Component
         $close();
 
         if ($entry !== '') {
-            $entries->enqueue($entry);
+            $entries->enqueue(LogParser::parseEntry($entry, $logFile));
 
             if ($entries->count() > self::MAX_PARSED_ENTRIES) {
                 $entries->dequeue();
@@ -144,9 +149,9 @@ class Service extends Component
 
         $logs = [];
 
-        // Release raw entries as they are parsed instead of retaining both full arrays.
+        // Transfer parsed entries without retaining a second raw copy of the window.
         while (!$entries->isEmpty()) {
-            $logs[] = LogParser::parseEntry($entries->dequeue(), $logFile);
+            $logs[] = $entries->dequeue();
         }
 
         return $logs ?: false;

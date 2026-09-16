@@ -133,3 +133,21 @@ it('keeps oversized plain-log reads inside the configured tail window', function
         ->and($elapsed)->toBeLessThan(2.0)
         ->and($memoryGrowth)->toBeLessThan(32 * 1024 * 1024);
 })->group('perf');
+
+it('reads a stable markup-heavy default window within a 256 MiB PHP limit', function() {
+    $file = tempnam(sys_get_temp_dir(), 'timber-markup-');
+    $process = new \Symfony\Component\Process\Process([
+        PHP_BINARY, '-d', 'memory_limit=256M', __DIR__ . '/../Support/read-markup-budget.php', $file,
+    ]);
+    $process->setTimeout(30);
+    try {
+        $process->run();
+        expect($process->isSuccessful(), $process->getErrorOutput() . $process->getOutput())->toBeTrue();
+        $result = json_decode($process->getOutput(), true, 512, JSON_THROW_ON_ERROR);
+        expect($result['count'])->toBeGreaterThan(20000);
+        expect($result['message'])->toContain('&lt;div')->not->toContain('<div');
+        expect($result['peakBytes'])->toBeLessThan(256 * 1024 * 1024);
+    } finally {
+        unlink($file);
+    }
+})->group('perf');
