@@ -20,6 +20,7 @@
 - Clarify log-reading limits, configuration, and log access in the documentation.
 
 ### Fixed
+- Allow log details to be expanded and collapsed with the keyboard, retaining focus after each action.
 - Preserve multiline messages and stack traces when parsing log strings.
 - Preserve files with matching names from different directories in downloaded log archives.
 - Keep raw and uncategorised entries visible when sorting, searching and changing files, and distinguish all filters from an empty selection.

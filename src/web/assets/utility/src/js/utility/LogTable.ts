@@ -211,7 +211,7 @@ export class LogTable {
         // One tbody per log (BEFORE) — wipe previous log bodies, keep updates banner.
         this.table.querySelectorAll('tbody.ti-tbody').forEach((node) => node.remove());
 
-        for (const log of logs) {
+        for (const [index, log] of logs.entries()) {
             const levelKey = formatLevelLabel(log.level, true);
             const expanded = Boolean(this.toggledLogs[getLogId(log)]);
             const messageHtml = markSearchHits(log.message || '', searchText);
@@ -259,7 +259,19 @@ export class LogTable {
 
             const messageTd = document.createElement('td');
             messageTd.className = 'ti-tbody-cell col-message';
-            messageTd.innerHTML = messageHtml;
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'ti-log-toggle';
+            toggle.setAttribute('aria-expanded', String(expanded));
+            toggle.setAttribute('aria-controls', `timber-log-detail-${index}`);
+            toggle.innerHTML = messageHtml;
+            toggle.addEventListener('click', (event) => {
+                event.stopPropagation();
+                this.toggleDetail(log);
+                // Rendering replaces the row; restore focus for repeated Enter/Space use.
+                this.table.querySelectorAll<HTMLButtonElement>('.ti-log-toggle')[index]?.focus();
+            });
+            messageTd.appendChild(toggle);
             row.appendChild(messageTd);
 
             group.appendChild(row);
@@ -267,6 +279,7 @@ export class LogTable {
             if (expanded) {
                 const detailRow = document.createElement('tr');
                 detailRow.className = 'ti-tbody-detail-row';
+                detailRow.id = `timber-log-detail-${index}`;
                 const detailTd = document.createElement('td');
                 detailTd.colSpan = this.detailColspan();
                 const pre = document.createElement('pre');
@@ -389,7 +402,7 @@ export class LogTable {
     }
 
     private sortColumn(column: SortColumn): void {
-        const orderBy = [column];
+        const orderBy: string[] = [column];
 
         if (this.props.orderBy.includes(' desc') && this.props.orderBy.includes(column)) {
             orderBy.push('asc');
