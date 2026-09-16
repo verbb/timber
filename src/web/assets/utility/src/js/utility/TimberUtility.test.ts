@@ -159,3 +159,37 @@ it('shows an actionable read failure and recovers when refresh succeeds', async 
     expect(utility['error']).toBe(false);
     expect(utility['logs']).toEqual([{ message: 'Restored content' }]);
 });
+
+describe.each(['levels', 'categories'] as const)('%s selections across searches', (type) => {
+    const prepare = (selected: string[]) => {
+        const result = makeUtility({ logs: [], info: {} });
+        Object.assign(Craft, { t: (_category: string, text: string) => text, formatNumber: String });
+        Object.assign(result.utility, {
+            [type]: selected, logInfo: { [type]: { ERROR: 1, WARNING: 1 } },
+            syncFilterMenuSelections: vi.fn(), debouncedFetch: vi.fn(),
+        });
+        return result;
+    };
+
+    it('does not select an unchecked value when a hidden selection makes counts equal', async () => {
+        const { utility, request } = prepare(['INFO']);
+        utility['toggleFilterOption'](type, 'ERROR');
+        expect(utility['filterSelectText'](type)).toBe('Select all');
+        await utility['fetchLog']();
+        expect(request.mock.lastCall?.[2].data[type]).toEqual(['INFO', 'ERROR']);
+    });
+
+    it('selects all visible values when equally many hidden values were selected', async () => {
+        const { utility, request } = prepare(['INFO', 'DEBUG']);
+        expect(utility['filterSelectText'](type)).toBe('Select all');
+        utility['filterSelectAll'](type);
+        expect(request.mock.lastCall?.[2].data[type]).toBeNull();
+    });
+
+    it('deselects all when every visible value and a hidden value are selected', () => {
+        const { utility, request } = prepare(['INFO', 'ERROR', 'WARNING']);
+        expect(utility['filterSelectText'](type)).toBe('Deselect all');
+        utility['filterSelectAll'](type);
+        expect(request.mock.lastCall?.[2].data[type]).toEqual([]);
+    });
+});

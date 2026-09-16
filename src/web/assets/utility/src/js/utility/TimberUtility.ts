@@ -280,7 +280,7 @@ export class TimberUtility {
             selected.splice(index, 1);
         }
 
-        this[type] = selected.length === this.filterInfo(type).length ? null : selected;
+        this[type] = this.allVisibleFiltersSelected(type, selected) ? null : selected;
         this.syncFilterMenuSelections(type);
         this.debouncedFetch();
     }
@@ -536,8 +536,14 @@ export class TimberUtility {
         return [...(this[type] ?? Object.keys(this.logInfo[type] ?? {}))];
     }
 
+    private allVisibleFiltersSelected(type: TimberFilterType, selected = this.selectedFilters(type)): boolean {
+        const options = this.filterInfo(type);
+
+        return options.length > 0 && options.every((option) => selected.includes(option.value));
+    }
+
     private filterSelectText(type: TimberFilterType): string {
-        if (this.selectedFilters(type).length !== this.filterInfo(type).length) {
+        if (!this.allVisibleFiltersSelected(type)) {
             return Craft.t('timber', 'Select all');
         }
 
@@ -687,8 +693,7 @@ export class TimberUtility {
     }
 
     private filterSelectAll(type: TimberFilterType): void {
-        const options = this.filterInfo(type);
-        const action = this.selectedFilters(type).length !== options.length ? 'add' : 'remove';
+        const action = this.allVisibleFiltersSelected(type) ? 'remove' : 'add';
 
         if (action === 'add') {
             this[type] = null;
