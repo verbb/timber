@@ -5,6 +5,27 @@ declare(strict_types=1);
 use verbb\timber\Timber;
 use verbb\timber\services\Service;
 
+it('preserves long physical lines across read chunks without inventing entries', function(bool $compressed) {
+    $temporary = tempnam(sys_get_temp_dir(), 'timber-chunks-');
+    $file = $compressed ? $temporary . '.gz' : $temporary;
+    $prefix = '2026-09-16 08:00:00 [INFO] ';
+    $data = $prefix . str_repeat('x', 8192 - strlen($prefix))
+        . "2026-09-16 08:00:01 [ERROR] This is inside the first message\n"
+        . "Trace line\n2026-09-16 08:00:02 [INFO] Second entry\n";
+    if ($compressed) {
+        $handle = gzopen($file, 'wb'); gzwrite($handle, $data); gzclose($handle);
+    } else {
+        file_put_contents($file, $data);
+    }
+    try {
+        $service = new Service();
+        expect($service->getLogs($file)->all())->toBe($service->getLogsFromString($file, $data));
+    } finally {
+        unlink($file);
+        if ($compressed) unlink($temporary);
+    }
+})->with([false, true]);
+
 it('bounds dense log windows while retaining the expected end of each format', function(bool $compressed) {
     $temporary = tempnam(sys_get_temp_dir(), 'timber-dense-');
     $file = $compressed ? $temporary . '.gz' : $temporary;

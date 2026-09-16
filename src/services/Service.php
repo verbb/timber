@@ -90,9 +90,23 @@ class Service extends Component
         $compressed = str_ends_with(strtolower($logFile), '.gz');
 
         while ($bytesRead < $maxBytes) {
-            $line = $readLine(($maxBytes - $bytesRead) + 1);
+            // fgets allocates its requested length even for a short line. Assemble
+            // physical lines from small chunks while retaining the hard byte cap.
+            $line = '';
+            $remaining = $maxBytes - $bytesRead;
 
-            if ($line === false) {
+            do {
+                $chunk = $readLine(min(8193, $remaining + 1));
+
+                if ($chunk === false) {
+                    break;
+                }
+
+                $line .= $chunk;
+                $remaining -= strlen($chunk);
+            } while ($remaining > 0 && !str_ends_with($chunk, "\n"));
+
+            if ($line === '') {
                 break;
             }
 

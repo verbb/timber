@@ -20,7 +20,7 @@
 - Clarify log-reading limits, configuration, and log access in the documentation.
 
 ### Fixed
-- Bound dense log files to 100,000 retained entries and release raw entries during parsing to prevent excessive memory use.
+- Bound dense log files to 100,000 retained entries, use small read buffers, and release raw entries during parsing to prevent excessive memory use.
 - Refresh cached log content after rapid same-size rewrites, including changes between sampled regions.
 - Continue live updates when log files are replaced or new daily files appear.
 - Retain complete log entries at the exact start of a bounded read window.
