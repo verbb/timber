@@ -37,5 +37,5 @@ export default {
         preserveSymlinks: false,
     },
 
-    optimizeDeps: { include: ['lodash-es', 'socket.io-client'] },
+    optimizeDeps: { include: ['lodash-es'] },
 };

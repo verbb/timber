@@ -2,7 +2,7 @@
 
 Timber can push new log entries to the Logs utility without refreshing the page. It uses [socket.io](https://socket.io/) under the hood to watch log files and notify the Control Panel.
 
-When an update to the currently viewed log file is detected, a notification shows with the count of new entries. Click the alert to load them — this keeps the entries you are reading in place while a busy log continues to grow.
+When an update to the currently viewed log file is detected, a notification shows that the file has changed. Click the alert to load them — this keeps the entries you are reading in place while a busy log continues to grow.
 
 ## Requirements
 
@@ -39,7 +39,7 @@ This creates a long-lived process that continually checks for updates to watchab
 Secondly, push those updates to the Timber log screen over WebSockets (a PHP-compatible socket.io server — no separate Node install required):
 
 ```shell
-./craft timber/logs/run start -d
+./craft timber/logs/run start
 ```
 
 This hosts the WebSocket listener on `socketPort`. It runs until you terminate it.

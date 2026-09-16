@@ -52,7 +52,7 @@ class TimberAsset extends AssetBundle
             'No results',
             'Time',
             'Message',
-            '{num} new logs available, click to load',
+            'Log file updated, click to reload',
         ]);
     }
 }

@@ -36,11 +36,6 @@ const parseJson = <T>(raw: string | null | undefined, fallback: T): T => {
     }
 };
 
-type SocketLike = {
-    on: (event: string, handler: (data: { file?: string; data?: TimberLogEntry[] }) => void) => void;
-    disconnect?: () => void;
-};
-
 export class TimberUtility {
     private readonly root: HTMLElement;
     private readonly settings: TimberSettings;
@@ -86,7 +81,7 @@ export class TimberUtility {
     private bodyPane!: HTMLElement;
     private logTable: LogTable | null = null;
 
-    private socket: SocketLike | null = null;
+    private socket: { disconnect: () => void } | null = null;
     private destroyed = false;
 
     /** Debounced refetch — 800ms like BEFORE (filter toggles + search). */
@@ -128,6 +123,7 @@ export class TimberUtility {
 
     destroy(): void {
         this.destroyed = true;
+        this.fetchGeneration += 1;
         this.debouncedFetch.cancel();
         this.onSearchInput.cancel();
         this.socket?.disconnect?.();
@@ -745,6 +741,14 @@ export class TimberUtility {
 
         if (!this.logs.length) {
             this.bodyPane.appendChild(this.emptyPane(Craft.t('timber', 'No results')));
+            if (this.pendingUpdates) {
+                const updates = document.createElement('button');
+                updates.type = 'button';
+                updates.className = 'ti-updates-banner-btn';
+                updates.textContent = Craft.t('timber', 'Log file updated, click to reload');
+                updates.addEventListener('click', () => this.fetchNewLogs());
+                this.bodyPane.appendChild(updates);
+            }
             return;
         }
 
@@ -920,25 +924,21 @@ export class TimberUtility {
     }
 
     private async startSocketServer(): Promise<void> {
-        // Realtime is opt-in; keep Socket.IO out of the normal log viewer path.
-        const { io } = await import('socket.io-client');
+        const { RealtimeConnection } = await import('./RealtimeConnection.js');
 
         if (this.destroyed || !this.settings.enableRealTimeUpdates) {
             return;
         }
 
-        this.socket = io(`http://localhost:${this.settings.socketPort}`, {
-            reconnection: true,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            reconnectionAttempts: 3,
-        }) as SocketLike;
-
-        // Invalidation only — never trust socket payloads for log content (SEC-04).
-        this.socket.on('logUpdate', (data) => {
-            if (data.file === this.logFile) {
-                this.pendingUpdates += 1;
-                this.syncLogTable();
+        this.socket = new RealtimeConnection(this.settings.socketPort, (file) => {
+            if (file === this.logFile) {
+                // A notification can represent multiple entries or truncation, not a count.
+                this.pendingUpdates = 1;
+                if (this.logTable) {
+                    this.syncLogTable();
+                } else if (!this.loading && !this.error) {
+                    this.renderBody();
+                }
             }
         });
     }

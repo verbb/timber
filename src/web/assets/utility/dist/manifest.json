@@ -1,28 +1,14 @@
 {
-  "../../../node_modules/socket.io-client/build/esm/index.js": {
-    "file": "assets/esm-BinGs1Q0.js",
-    "name": "esm",
-    "src": "../../../node_modules/socket.io-client/build/esm/index.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "_rolldown-runtime-DK3Fl9T5.js"
-    ]
-  },
-  "_rolldown-runtime-DK3Fl9T5.js": {
-    "file": "assets/rolldown-runtime-DK3Fl9T5.js",
-    "name": "rolldown-runtime"
-  },
   "_timberPkComponents-BoxGpGQU.js": {
     "file": "assets/timberPkComponents-BoxGpGQU.js",
     "name": "timberPkComponents"
   },
   "utility/src/js/plugin-kit-register.ts": {
-    "file": "assets/pluginKit-5YTjD01I.js",
+    "file": "assets/pluginKit--Ww_o7OB.js",
     "name": "pluginKit",
     "src": "utility/src/js/plugin-kit-register.ts",
     "isEntry": true,
     "imports": [
-      "_rolldown-runtime-DK3Fl9T5.js",
       "_timberPkComponents-BoxGpGQU.js"
     ],
     "css": [
@@ -30,7 +16,7 @@
     ]
   },
   "utility/src/js/timber.ts": {
-    "file": "assets/timber-mkIHJfL7.js",
+    "file": "assets/timber-DutZu-7Y.js",
     "name": "timber",
     "src": "utility/src/js/timber.ts",
     "isEntry": true,
@@ -38,10 +24,16 @@
       "_timberPkComponents-BoxGpGQU.js"
     ],
     "dynamicImports": [
-      "../../../node_modules/socket.io-client/build/esm/index.js"
+      "utility/src/js/utility/RealtimeConnection.ts"
     ],
     "css": [
       "assets/timber-BI3h4lL7.css"
     ]
+  },
+  "utility/src/js/utility/RealtimeConnection.ts": {
+    "file": "assets/RealtimeConnection-D61w8EpR.js",
+    "name": "RealtimeConnection",
+    "src": "utility/src/js/utility/RealtimeConnection.ts",
+    "isDynamicEntry": true
   }
 }

@@ -11,7 +11,7 @@
 
 ### Changed
 - Non-admin users require an explicit log-view permission as well as access to the Logs utility. Review user groups when upgrading; see [Upgrading from Timber 2.0](https://verbb.io/craft-plugins/timber/docs/get-started/upgrading-from-timber-2-0).
-- Load Socket.IO only when realtime updates are enabled, and update frontend dependencies to their patched releases.
+- Load the live-update connection only when realtime updates are enabled.
 - Clarified optional PHP configuration with focused examples and linkable setting details.
 - Rebuild the Logs utility UI on [Plugin Kit](https://docs.verbb.io/plugin-kit/web/) (web components). Existing log viewing, filtering, search, pagination, download/delete, and real-time updates are preserved.
 - The log file picker is now a searchable combobox.
@@ -20,6 +20,7 @@
 - Clarify log-reading limits, configuration, and log access in the documentation.
 
 ### Fixed
+- Restore live-update connections to the PHP socket server and show update notifications for empty logs without reporting an inaccurate entry count.
 - Allow file-specific view permissions to be saved without granting access to every log.
 - Allow log details to be expanded and collapsed with the keyboard, retaining focus after each action.
 - Preserve multiline messages and stack traces when parsing log strings.

@@ -15,19 +15,3 @@ declare module 'lodash-es' {
     ): T & { cancel(): void };
     export function get(object: unknown, path: string, defaultValue?: unknown): unknown;
 }
-
-declare module 'socket.io-client' {
-    interface Socket {
-        on(event: string, handler: (...args: unknown[]) => void): Socket;
-        disconnect(): Socket;
-    }
-
-    interface SocketOptions {
-        reconnection?: boolean;
-        reconnectionDelay?: number;
-        reconnectionDelayMax?: number;
-        reconnectionAttempts?: number;
-    }
-
-    export default function io(url: string, options?: SocketOptions): Socket;
-}

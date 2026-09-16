@@ -192,9 +192,7 @@ export class LogTable {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'ti-updates-banner-btn';
-        button.textContent = Craft.t('timber', '{num} new logs available, click to load', {
-            num: pendingUpdates,
-        });
+        button.textContent = Craft.t('timber', 'Log file updated, click to reload');
         button.addEventListener('click', (event) => {
             event.preventDefault();
             this.callbacks.onFetchUpdates();
