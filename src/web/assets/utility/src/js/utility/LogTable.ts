@@ -283,6 +283,11 @@ export class LogTable {
                 const pre = document.createElement('pre');
                 pre.className = 'log-detail';
                 pre.innerHTML = messageHtml;
+
+                if (typeof log.context === 'string' && log.context !== '') {
+                    pre.appendChild(document.createTextNode('\n\n' + log.context));
+                }
+
                 detailTd.appendChild(pre);
                 detailRow.appendChild(detailTd);
                 group.appendChild(detailRow);

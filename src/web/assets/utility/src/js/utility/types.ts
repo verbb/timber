@@ -20,6 +20,7 @@ export interface TimberLogEntry {
     channel?: string;
     category?: string;
     message: string;
+    context?: string | null;
     [key: string]: unknown;
 }
 
