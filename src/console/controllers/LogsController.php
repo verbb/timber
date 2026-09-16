@@ -37,7 +37,8 @@ class LogsController extends Controller
         $settings = Timber::$plugin->getSettings();
         $socketPort = $settings->socketPort;
 
-        new Server();
+        // The event transport is shared only by local workers.
+        new Server('127.0.0.1');
         $io = new SocketIO($socketPort);
 
         $io->on('workerStart', function() use ($io) {

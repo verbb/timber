@@ -20,6 +20,7 @@
 - Clarify log-reading limits, configuration, and log access in the documentation.
 
 ### Fixed
+- Fixed a high-severity object injection vulnerability.
 - Fixed a moderate-severity access control vulnerability.
 - Bound dense log files to 100,000 retained entries, use small read buffers, and release raw entries during parsing to prevent excessive memory use.
 - Refresh cached log content after rapid same-size rewrites, including changes between sampled regions.
