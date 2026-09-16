@@ -46,6 +46,7 @@
 - Preserve levels and categories for custom Craft log channel names.
 - Keep logs viewable and filterable when metadata contains invalid UTF-8 bytes.
 - Sort log timestamps chronologically across timezone and daylight-saving changes, preserving their displayed offsets.
+- Sort log messages by their displayed text rather than HTML entities.
 - Separate native PHP error entries and sort their timestamps correctly across month boundaries.
 - Preserve files with matching names from different directories in downloaded log archives.
 - Report unreadable log files as errors instead of empty results or downloads.
