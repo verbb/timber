@@ -107,18 +107,9 @@ class LogFiles
         $paths = [];
 
         foreach (self::findAll($refresh) as $file) {
-            $basename = basename($file['path']);
+            $watchable = $file['watchable'] ?? (!$file['compressed'] && str_ends_with($file['path'], '.log'));
 
-            if ($file['compressed']) {
-                continue;
-            }
-
-            if (!preg_match('/\.log$/', $basename)) {
-                continue;
-            }
-
-            // Skip numbered rotations like web.log.1 — they are static archives.
-            if (preg_match('/\.log\.\d+$/', $basename)) {
+            if (!$watchable) {
                 continue;
             }
 
@@ -198,6 +189,11 @@ class LogFiles
         return self::_catalogFile($path) !== null;
     }
 
+    public static function isCompressed(string $path): bool
+    {
+        return self::_catalogFile($path)['compressed'] ?? str_ends_with(strtolower($path), '.gz');
+    }
+
     private static function _canViewFile(array $file, ?User $user): bool
     {
         if (!$user) {
@@ -223,10 +219,6 @@ class LogFiles
 
     private static function _catalogFile(string $path): ?array
     {
-        if (!self::_isDiscoverableLogFilename(basename($path))) {
-            return null;
-        }
-
         $resolved = self::_normalizePath($path);
 
         foreach (self::findAll() as $file) {
@@ -269,6 +261,9 @@ class LogFiles
             }
 
             $seen[$resolved] = true;
+            $compressed = (is_array($file) && isset($file['compressed']))
+                ? (bool)$file['compressed']
+                : str_ends_with(strtolower($path), '.gz');
 
             $normalized[] = [
                 'path' => $resolved,
@@ -277,10 +272,10 @@ class LogFiles
                     : (filesize($resolved) ?: 0),
                 'stem' => (is_array($file) && ($file['stem'] ?? '') !== '')
                     ? (string)$file['stem']
-                    : self::stem($resolved),
-                'compressed' => (is_array($file) && isset($file['compressed']))
-                    ? (bool)$file['compressed']
-                    : str_ends_with(strtolower($resolved), '.gz'),
+                    : self::stem($path),
+                'compressed' => $compressed,
+                // Symlink targets may not retain the discovered file's suffix.
+                'watchable' => !$compressed && str_ends_with($path, '.log'),
             ];
         }
 

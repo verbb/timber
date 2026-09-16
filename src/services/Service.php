@@ -2,6 +2,7 @@
 namespace verbb\timber\services;
 
 use verbb\timber\Timber;
+use verbb\timber\helpers\LogFiles;
 use verbb\timber\helpers\LogParser;
 use verbb\timber\helpers\LogQueryProcessor;
 
@@ -29,19 +30,20 @@ class Service extends Component
     {
         $maxBytes = Timber::$plugin?->getSettings()?->getMaxLogReadBytes() ?? 52_428_800;
 
+        $compressed = LogFiles::isCompressed($logFile);
         $cacheKey = md5(
             LogParser::VERSION . ':' . self::MAX_PARSED_ENTRIES . ':'
             . LogParser::cacheKeySuffix($logFile) . ':'
             . $logFile . ':'
             . $this->_fileGenerationToken($logFile) . ':'
-            . $maxBytes
+            . $maxBytes . ':' . (int)$compressed
         );
 
         // Filesystem timestamps have second precision. Wait until both timestamps are
         // stable before caching, so rapid same-size edits cannot reuse an earlier parse.
         $modified = max(@filemtime($logFile) ?: 0, @filectime($logFile) ?: 0);
         $read = fn() => $this->readLogFile($logFile, $maxBytes);
-        $readBytes = str_ends_with(strtolower($logFile), '.gz') ? $maxBytes : min(@filesize($logFile) ?: 0, $maxBytes);
+        $readBytes = $compressed ? $maxBytes : min(@filesize($logFile) ?: 0, $maxBytes);
 
         // Cache serialization duplicates the parsed window in memory. Large windows
         // are read directly; gzip eligibility uses its uncompressed read budget.
@@ -94,7 +96,7 @@ class Service extends Component
         $entry = '';
         $lineStart = LogParser::lineStartPattern($logFile);
         $bytesRead = 0;
-        $compressed = str_ends_with(strtolower($logFile), '.gz');
+        $compressed = LogFiles::isCompressed($logFile);
 
         while ($bytesRead < $maxBytes) {
             // fgets allocates its requested length even for a short line. Assemble
@@ -169,7 +171,7 @@ class Service extends Component
 
     protected function openLogFile(string $logFile, int $maxBytes = 0): array
     {
-        if (str_ends_with(strtolower($logFile), '.gz')) {
+        if (LogFiles::isCompressed($logFile)) {
             $handle = @gzopen($logFile, 'rb');
 
             if ($handle === false) {

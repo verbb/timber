@@ -17,3 +17,30 @@ it('discovers supported uncompressed dated rotations and groups their stems', fu
         $catalog->setValue(null, null);
     }
 });
+
+it('keeps discovered symlink targets accessible with their original log format', function(bool $compressed) {
+    $directory = Craft::getAlias('@storage/logs') . '/symlink-catalog-fixture';
+    mkdir($directory . '/target', 0777, true);
+    $target = $directory . '/target/access_log';
+    $alias = $directory . '/linked.log' . ($compressed ? '.gz' : '');
+    $data = "2026-09-17 10:00:00 [INFO] Linked log entry\n";
+    file_put_contents($target, $compressed ? gzencode($data) : $data);
+    symlink($target, $alias);
+    try {
+        $files = array_values(array_filter(LogFiles::findAll(true), fn($file) => str_starts_with($file['path'], $directory . '/')));
+        expect($files)->toHaveCount(1);
+        expect($files[0]['stem'])->toBe('linked');
+        expect(LogFiles::isAccessibleLogPath($files[0]['path']))->toBeTrue();
+        expect(LogFiles::isAccessibleLogPath($alias))->toBeTrue();
+        expect(in_array($files[0]['path'], LogFiles::watchablePaths(), true))->toBe(!$compressed);
+        $rows = verbb\timber\Timber::$plugin->getService()->getLogs($files[0]['path'])->all();
+        expect($rows)->toHaveCount(1);
+        expect($rows[0]['message'])->toContain('Linked log entry');
+    } finally {
+        unlink($alias);
+        unlink($target);
+        rmdir($directory . '/target');
+        rmdir($directory);
+        LogFiles::findAll(true);
+    }
+})->with(['plain' => false, 'gzip' => true]);
