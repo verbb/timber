@@ -827,6 +827,24 @@ export class TimberUtility {
         void this.fetchLog();
     }
 
+    private clearSelectedLog(): void {
+        // A deleted selection must not be restored by a late read or queued filter.
+        this.fetchGeneration += 1;
+        this.debouncedFetch.cancel();
+        this.onSearchInput.cancel();
+        this.logFile = null;
+        this.pendingLogFile = null;
+        this.logs = [];
+        this.logInfo = {};
+        this.pageInfo = {};
+        this.levels = null;
+        this.categories = null;
+        this.pendingUpdates = 0;
+        this.loading = false;
+        this.error = false;
+        this.errorMessage = '';
+    }
+
     private async deleteLog(file: string): Promise<void> {
         if (!confirm(Craft.t('timber', 'Are you sure you want to permanently delete this log file?'))) {
             return;
@@ -845,12 +863,7 @@ export class TimberUtility {
             this.proxyLogFiles = this.proxyLogFiles.filter((item) => item.path !== file);
 
             if (file === this.logFile) {
-                this.logFile = null;
-                this.logs = [];
-                this.logInfo = {};
-                this.pageInfo = {};
-                this.levels = null;
-                this.categories = null;
+                this.clearSelectedLog();
             }
 
             this.syncFileTrigger();
@@ -882,13 +895,8 @@ export class TimberUtility {
                 throw new Error(response.data);
             }
 
-            this.logFile = null;
+            this.clearSelectedLog();
             this.proxyLogFiles = [];
-            this.logs = [];
-            this.logInfo = {};
-            this.pageInfo = {};
-            this.levels = null;
-            this.categories = null;
 
             this.syncFileTrigger();
             this.rebuildFileOptions();
@@ -944,6 +952,10 @@ export class TimberUtility {
     }
 
     private async fetchLog(resetPage = true): Promise<void> {
+        if (this.destroyed || !this.logFile) {
+            return;
+        }
+
         this.error = false;
         this.loading = true;
         this.errorMessage = '';

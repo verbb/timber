@@ -13,7 +13,10 @@ const makeUtility = (response: Record<string, unknown>) => {
     return { utility, request };
 };
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+});
 
 describe('Log filter requests', () => {
     it('keeps missing level and category filters unrestricted after the first raw-log load', async () => {
@@ -51,4 +54,79 @@ it('preserves chosen facets through a search with no matching entries', async ()
     await utility['fetchLog']();
     await utility['fetchLog']();
     expect(request.mock.lastCall?.[2].data).toMatchObject({ levels: ['ERROR'], categories: ['app'] });
+});
+
+describe.each(['single', 'all'])('%s log deletion', (mode) => {
+    const deleteLogs = (utility: TimberUtility) => mode === 'single'
+        ? utility['deleteLog']('/logs/raw.log')
+        : utility['deleteAllLogs']();
+
+    it('clears the loading state and ignores a late failed read after deletion succeeds', async () => {
+        const { utility, request } = makeUtility({ success: true });
+        vi.stubGlobal('confirm', () => true);
+        Object.assign(Craft, { t: (_category: string, text: string) => text });
+        let rejectRead!: (reason: Error) => void;
+        request.mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectRead = reject; }));
+        const read = utility['fetchLog']();
+
+        await deleteLogs(utility);
+        expect(utility['logFile']).toBeNull();
+        expect(utility['loading']).toBe(false);
+        rejectRead(new Error('The deleted file is unavailable'));
+        await read;
+        expect(utility['error']).toBe(false);
+        expect(utility['logs']).toEqual([]);
+    });
+
+    it('recovers from an earlier read error and cancels pending filter requests', async () => {
+        vi.useFakeTimers();
+        const { utility, request } = makeUtility({ success: true });
+        vi.stubGlobal('confirm', () => true);
+        Object.assign(Craft, { t: (_category: string, text: string) => text });
+        Object.assign(utility, { error: true, errorMessage: 'Earlier failure' });
+        utility['debouncedFetch']();
+
+        await deleteLogs(utility);
+        await vi.runAllTimersAsync();
+        expect(utility['error']).toBe(false);
+        expect(utility['errorMessage']).toBe('');
+        expect(request).toHaveBeenCalledTimes(1);
+    });
+
+    it('discards a successful read that arrives after deletion', async () => {
+        const { utility, request } = makeUtility({ success: true });
+        vi.stubGlobal('confirm', () => true);
+        Object.assign(Craft, { t: (_category: string, text: string) => text });
+        let resolveRead!: (value: unknown) => void;
+        request.mockImplementationOnce(() => new Promise((resolve) => { resolveRead = resolve; }));
+        const read = utility['fetchLog']();
+        await deleteLogs(utility);
+        resolveRead({ data: { logs: [{ message: 'Deleted content' }] } });
+        await read;
+        expect(utility['logs']).toEqual([]);
+        expect(utility['logFile']).toBeNull();
+    });
+
+    it('retains the selected file when deletion fails', async () => {
+        const { utility } = makeUtility({ success: false });
+        vi.stubGlobal('confirm', () => true);
+        Object.assign(Craft, { t: (_category: string, text: string) => text });
+        await deleteLogs(utility);
+        expect(utility['logFile']).toBe('/logs/raw.log');
+        expect(utility['error']).toBe(true);
+    });
+});
+
+it('keeps the selected log request active when a different file is deleted', async () => {
+    const { utility, request } = makeUtility({ success: true });
+    vi.stubGlobal('confirm', () => true);
+    Object.assign(Craft, { t: (_category: string, text: string) => text });
+    let resolveRead!: (value: unknown) => void;
+    request.mockImplementationOnce(() => new Promise((resolve) => { resolveRead = resolve; }));
+    const read = utility['fetchLog']();
+    await utility['deleteLog']('/logs/other.log');
+    resolveRead({ data: { logs: [{ message: 'Selected file remains readable' }] } });
+    await read;
+    expect(utility['logFile']).toBe('/logs/raw.log');
+    expect(utility['logs']).toEqual([{ message: 'Selected file remains readable' }]);
 });
