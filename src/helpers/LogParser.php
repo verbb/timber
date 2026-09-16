@@ -20,7 +20,7 @@ class LogParser
     public const EVENT_MODIFY_LOG_PARSERS = 'modifyLogParsers';
 
     /** Bump when built-in parser rules change so parsed-log caches invalidate. */
-    public const VERSION = '7';
+    public const VERSION = '8';
 
     private const ENTRY_FIELDS = ['datetime', 'channel', 'level', 'category', 'message', 'context'];
 
@@ -138,7 +138,7 @@ class LogParser
         return [
             // Craft 5 — 2026-08-18 17:00:27 [web.INFO] [category] message
             self::parser(
-                '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (\[(?:(?P<channel>\w+)\.)?(?P<level>\w+)\])(?: \[(?P<category>.*?)\])? (?P<message>.*)/s',
+                '/^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (\[(?:(?P<channel>[^\]\r\n]+)\.)?(?P<level>\w+)\])(?: \[(?P<category>.*?)\])? (?P<message>.*)/s',
                 ['datetime', 'channel', 'level', 'category', 'message'],
             ),
             // Craft 3 / Yii — extra bracket groups before level + category

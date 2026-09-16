@@ -41,6 +41,7 @@
 - Keep identical and similar log entries independently expandable.
 - Show custom parser context in expanded log details.
 - Parse IPv4 and IPv6 request prefixes in legacy Yii and Craft logs.
+- Preserve levels and categories for custom Craft log channel names.
 - Keep logs viewable and filterable when metadata contains invalid UTF-8 bytes.
 - Sort log timestamps chronologically across timezone and daylight-saving changes, preserving their displayed offsets.
 - Separate native PHP error entries and sort their timestamps correctly across month boundaries.
