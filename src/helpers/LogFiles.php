@@ -46,6 +46,12 @@ class LogFiles
         return pathinfo($filename, PATHINFO_FILENAME);
     }
 
+    public static function viewPermission(string $stem): string
+    {
+        // Craft lowercases permission names; a fixed-length digest preserves stem identity.
+        return 'timber-viewLogFile:' . hash('sha256', $stem);
+    }
+
     public static function findAll(bool $refresh = false): array
     {
         if ($refresh) {
@@ -205,14 +211,14 @@ class LogFiles
         }
 
         // Admins and the parent “view all” permission skip per-stem checks (including
-        // stems that appear later). Nested `timber-viewLogs:{stem}` only apply when the
+        // stems that appear later). File-specific grants only apply when the
         // parent is not granted. Users with neither parent nor a matching nested grant
         // are denied — do not fail open to every config-visible file.
         if ($user->admin || $user->can('timber-viewLogs')) {
             return true;
         }
 
-        return $user->can('timber-viewLogs:' . $stem);
+        return $user->can(self::viewPermission($stem));
     }
 
     private static function _catalogFile(string $path): ?array

@@ -91,7 +91,7 @@ class Timber extends Plugin
             $nested = [];
 
             foreach (LogFiles::discoverStems() as $stem) {
-                $nested['timber-viewLogs:' . $stem] = [
+                $nested[LogFiles::viewPermission($stem)] = [
                     'label' => Craft::t('timber', 'View “{file}” logs', ['file' => $stem]),
                 ];
             }

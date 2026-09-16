@@ -28,8 +28,8 @@ it('enforces real persisted file and action permissions for direct requests', fu
         $cases = [
             [[], 'index', false],
             [['utility:timber-logs'], 'index', false],
-            [['utility:timber-logs', 'timber-viewLogs:other'], 'index', false],
-            [['utility:timber-logs', 'timber-viewLogs:permission-fixture'], 'index', true],
+            [['utility:timber-logs', LogFiles::viewPermission('other')], 'index', false],
+            [['utility:timber-logs', LogFiles::viewPermission('permission-fixture')], 'index', true],
             [['utility:timber-logs', 'timber-viewLogs'], 'index', true],
             [['utility:timber-logs', 'timber-viewLogs'], 'download', false],
             [['utility:timber-logs', 'timber-viewLogs'], 'delete', false],
@@ -43,7 +43,7 @@ it('enforces real persisted file and action permissions for direct requests', fu
             Craft::$app->getUser()->setIdentity(User::find()->id($user->id)->status(null)->one());
             CpRequestContext::activate('actions/timber/logs/' . $action, 'POST', true);
             Craft::$app->getRequest()->setBodyParams(['file' => $file]);
-            $canView = in_array('timber-viewLogs', $permissions, true) || in_array('timber-viewLogs:permission-fixture', $permissions, true);
+            $canView = in_array('timber-viewLogs', $permissions, true) || in_array(LogFiles::viewPermission('permission-fixture'), $permissions, true);
             expect(in_array($file, array_column(LogFiles::visible(), 'path'), true))->toBe($canView);
             $controller = new LogsController('logs', Timber::$plugin);
             $controller->enableCsrfValidation = false;
