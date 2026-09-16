@@ -199,6 +199,23 @@ describe('Realtime payload contract', function() {
 });
 
 describe('Multiline string parsing', function() {
+    it('separates native PHP errors and sorts their timestamps across month boundaries', function() {
+        $data = "[31-Jan-2026 23:59:00 UTC] First warning\nStack trace:\n#0 frame\n[previous exception] Continued\n[01-Feb-2026 00:01:00 UTC] Second warning\n";
+        $file = tempnam(sys_get_temp_dir(), 'timber-php-errors-');
+        file_put_contents($file, $data);
+        try {
+            $service = new Service();
+            $logs = $service->getLogsFromString($file, $data);
+            expect($logs)->toHaveCount(2);
+            expect($logs[0]['message'])->toContain('[previous exception] Continued');
+            expect($logs[0]['datetime'])->toBe('2026-01-31 23:59:00');
+            expect($logs)->toBe($service->getLogs($file)->all());
+            expect($service->getLogs($file)->orderBy('datetime desc')->all()[0]['message'])->toContain('Second warning');
+        } finally {
+            unlink($file);
+        }
+    });
+
     it('preserves stack trace line breaks and matches file parsing', function() {
         $data = "2026-09-16 08:00:00 [web.ERROR] [app] First line\n#0 stack frame\n#1 another frame\n2026-09-16 08:01:00 [INFO] Last line";
         $file = tempnam(sys_get_temp_dir(), 'timber-multiline-');

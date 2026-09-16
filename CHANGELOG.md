@@ -31,6 +31,7 @@
 - Allow file-specific view permissions to be saved without granting access to every log.
 - Allow log details to be expanded and collapsed with the keyboard, retaining focus after each action.
 - Preserve multiline messages and stack traces when parsing log strings.
+- Separate native PHP error entries and sort their timestamps correctly across month boundaries.
 - Preserve files with matching names from different directories in downloaded log archives.
 - Clear loading and error states after deleting logs, and ignore pending reads for deleted selections.
 - Keep raw and uncategorised entries visible when sorting, searching and changing files, and distinguish all filters from an empty selection.
