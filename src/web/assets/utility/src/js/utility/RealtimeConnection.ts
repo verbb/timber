@@ -11,7 +11,11 @@ export class RealtimeConnection {
     private stopped = false;
     private retries = 0;
 
-    constructor(private readonly port: number, private readonly onUpdate: (file: string) => void) {
+    constructor(
+        private readonly port: number,
+        private readonly token: string,
+        private readonly onUpdate: (id: string) => void,
+    ) {
         this.connect();
     }
 
@@ -31,7 +35,8 @@ export class RealtimeConnection {
     private connect(): void {
         if (this.stopped) return;
 
-        const socket = new WebSocket(`ws://localhost:${this.port}/socket.io/?EIO=3&transport=websocket`);
+        const token = encodeURIComponent(this.token);
+        const socket = new WebSocket(`ws://127.0.0.1:${this.port}/socket.io/?EIO=3&transport=websocket&token=${token}`);
         this.socket = socket;
         let pingInterval = 25000;
         let pingTimeout = 5000;
@@ -70,8 +75,8 @@ export class RealtimeConnection {
                 } else if (packet.startsWith('42') && ready) {
                     const payload = JSON.parse(packet.slice(2));
                     if (Array.isArray(payload) && payload[0] === 'logUpdate'
-                        && payload[1] && typeof payload[1].file === 'string') {
-                        this.onUpdate(payload[1].file);
+                        && payload[1] && typeof payload[1].id === 'string') {
+                        this.onUpdate(payload[1].id);
                     }
                 } else if (packet === '1' || packet === '41') {
                     socket.close();

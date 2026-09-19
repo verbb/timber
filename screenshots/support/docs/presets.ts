@@ -2,15 +2,15 @@ import type {
     ScreenshotStep,
     ScreenshotTarget,
     ScreenshotViewport,
-} from '@verbb/docs-screenshots/types';
+} from '@verbb/craft-screenshots/types';
 import {
     createCpDetailViewPreset as createBaseCpDetailViewPreset,
     createCpFocusedRegionPreset as createBaseCpFocusedRegionPreset,
     createCpFullScreenPreset as createBaseCpFullScreenPreset,
     createCpModalPreset as createBaseCpModalPreset,
-} from '@verbb/docs-screenshots/presets';
+} from '@verbb/craft-screenshots/presets';
 
-// Plugin-local preset layer. Generic capture math lives in @verbb/docs-screenshots;
+// Plugin-local preset layer. Generic capture math lives in @verbb/craft-screenshots;
 // this file only adds Timber-specific CP chrome cleanup + framing steps. As the Phase 1
 // virtualised log table lands, add promo-crop steps here (model on Hyper's presets.ts).
 

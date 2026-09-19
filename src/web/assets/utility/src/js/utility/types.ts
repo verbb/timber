@@ -3,6 +3,8 @@
 export interface TimberLogFile {
     path: string;
     size: number;
+    id: string;
+    deletable: boolean;
 }
 
 export interface TimberSettings {
@@ -10,6 +12,7 @@ export interface TimberSettings {
     logDirectory?: string;
     limit: number;
     socketPort: number;
+    socketToken: string;
     enableRealTimeUpdates: boolean;
     canDownload: boolean;
     canDelete: boolean;

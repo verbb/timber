@@ -18,10 +18,13 @@
 - Improve accessibility, arrow-key, typeahead, and Enter/Space navigation.
 - Improve responsive handling for the Logs utility.
 - Clarify log-reading limits, configuration, and log access in the documentation.
+- Limit deletion to top-level files in `@storage/logs`; nested and event-added external logs remain available for viewing and download.
 
 ### Fixed
 - Fixed a high-severity object injection vulnerability.
 - Fixed a moderate-severity access control vulnerability.
+- Fixed a low-severity improper link resolution vulnerability.
+- Fixed a low-severity information disclosure vulnerability.
 - Avoid repeated catalog scans when listing large collections of log files.
 - Reduce memory use when parsing large log windows and avoid duplicating them during caching.
 - Replace obsolete parsed-log cache entries when a file changes.

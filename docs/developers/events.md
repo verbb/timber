@@ -7,6 +7,7 @@ Timber provides a collection of events for extending its functionality. Modules 
 The event that is triggered when Timber builds its catalogue of log files. The default list is every discoverable log under `@storage/logs` (`.log`, `.txt`, rotations, and `.gz` archives). Use this to add files from other directories, remove files, or override a file’s `stem` (the name used for permissions and include/exclude lists).
 
 Include/exclude settings and user permissions still apply after the event.
+Event-added external files can be viewed and downloaded, but Timber only offers deletion for top-level files in `@storage/logs`.
 
 ```php
 use verbb\timber\events\ModifyLogFilesEvent;

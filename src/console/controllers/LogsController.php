@@ -4,6 +4,7 @@ namespace verbb\timber\console\controllers;
 use verbb\timber\Timber;
 use verbb\timber\helpers\LogFiles;
 use verbb\timber\models\Settings;
+use verbb\timber\realtime\AuthenticatedSocketIO;
 
 use Craft;
 use craft\console\Controller;
@@ -16,7 +17,6 @@ use Throwable;
 use Channel\Server;
 use Emitter;
 use PHPSocketIO\ChannelAdapter;
-use PHPSocketIO\SocketIO;
 use Symfony\Component\Process\Process;
 use Workerman\Worker;
 
@@ -39,7 +39,10 @@ class LogsController extends Controller
 
         // The event transport is shared only by local workers.
         new Server('127.0.0.1');
-        $io = new SocketIO($socketPort);
+        $io = new AuthenticatedSocketIO();
+        $worker = new Worker('SocketIO://127.0.0.1:' . $socketPort);
+        $worker->name = 'PHPSocketIO';
+        $io->attach($worker);
 
         $io->on('workerStart', function() use ($io) {
             $io->adapter(ChannelAdapter::class);
@@ -137,6 +140,6 @@ class LogsController extends Controller
     /** Keep realtime messages free of log content; authorized clients refetch it. */
     private function _invalidationPayload(string $file): array
     {
-        return ['file' => $file];
+        return ['id' => LogFiles::identifier($file)];
     }
 }

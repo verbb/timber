@@ -200,8 +200,9 @@ describe('Realtime payload contract', function() {
         $method = new ReflectionMethod(ConsoleLogsController::class, '_invalidationPayload');
         $method->setAccessible(true);
 
-        expect($method->invoke($controller, '/storage/logs/web.log'))
-            ->toBe(['file' => '/storage/logs/web.log']);
+        $payload = $method->invoke($controller, '/storage/logs/web.log');
+        expect($payload)->toBe(['id' => LogFiles::identifier('/storage/logs/web.log')])
+            ->and($payload['id'])->not->toContain('/storage/logs/web.log');
     });
 });
 

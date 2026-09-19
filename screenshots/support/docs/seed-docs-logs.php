@@ -2,7 +2,7 @@
  * Seed sample log files into Craft's storage/logs for Timber docs screenshots.
  *
  * Echoes JSON: utilityRoute, logFile.
- * Note: no opening PHP tag — @verbb/docs-screenshots injects this into a bootstrap.
+ * Note: no opening PHP tag — @verbb/craft-screenshots injects this into a bootstrap.
  *
  * Starter seed: writes a small, deterministic web.log so the Logs utility renders rows.
  * Expand with more levels/categories as the Phase 1 virtualised log table lands.

@@ -106,6 +106,7 @@ export class TimberUtility {
             logFiles: [],
             limit: 100,
             socketPort: 8085,
+            socketToken: '',
             enableRealTimeUpdates: false,
             canDownload: false,
             canDelete: false,
@@ -397,7 +398,9 @@ export class TimberUtility {
         this.fileSize.hidden = !info.size;
 
         this.settingsMenu?.querySelectorAll('[data-single-log-action]').forEach((item) => {
-            item.toggleAttribute('disabled', !this.logFile || this.deleteLoading === this.logFile);
+            const cannotDelete = item.hasAttribute('data-delete-log-action')
+                && !this.proxyLogFiles.some((file) => file.path === this.logFile && file.deletable);
+            item.toggleAttribute('disabled', !this.logFile || this.deleteLoading === this.logFile || cannotDelete);
         });
 
         this.filtersRow.hidden = !this.logFile;
@@ -461,7 +464,7 @@ export class TimberUtility {
                 size.appendChild(download);
             }
 
-            if (this.settings.canDelete) {
+            if (this.settings.canDelete && item.deletable) {
                 const del = this.createIconButton({
                     icon: 'xmark',
                     label: Craft.t('timber', 'Delete'),
@@ -522,8 +525,9 @@ export class TimberUtility {
             const del = document.createElement('pk-dropdown-item');
             del.value = 'delete';
             del.setAttribute('data-single-log-action', '');
+            del.setAttribute('data-delete-log-action', '');
             del.setAttribute('destructive', '');
-            del.toggleAttribute('disabled', !this.logFile);
+            del.toggleAttribute('disabled', !this.proxyLogFiles.some((file) => file.path === this.logFile && file.deletable));
             del.innerHTML = `<pk-icon slot="start" icon="xmark"></pk-icon>${escapeHtml(Craft.t('timber', 'Delete selected log'))}`;
             this.settingsMenu.appendChild(del);
 
@@ -931,8 +935,17 @@ export class TimberUtility {
                 throw new Error(response.data.message ?? response.data);
             }
 
-            this.clearSelectedLog();
-            this.proxyLogFiles = [];
+            const deleted = response.data.deleted;
+
+            if (!Array.isArray(deleted)) {
+                throw new Error(Craft.t('timber', 'Unable to confirm which log files were deleted.'));
+            }
+
+            this.proxyLogFiles = this.proxyLogFiles.filter((item) => !deleted.includes(item.path));
+
+            if (this.logFile && deleted.includes(this.logFile)) {
+                this.clearSelectedLog();
+            }
 
             this.syncFileTrigger();
             this.rebuildFileOptions();
@@ -987,8 +1000,8 @@ export class TimberUtility {
             return;
         }
 
-        this.socket = new RealtimeConnection(this.settings.socketPort, (file) => {
-            if (file === this.logFile) {
+        this.socket = new RealtimeConnection(this.settings.socketPort, this.settings.socketToken, (id) => {
+            if (this.proxyLogFiles.some((file) => file.path === this.logFile && file.id === id)) {
                 // A notification can represent multiple entries or truncation, not a count.
                 this.pendingUpdates = 1;
                 if (this.logTable) {

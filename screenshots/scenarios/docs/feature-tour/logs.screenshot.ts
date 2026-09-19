@@ -1,15 +1,15 @@
-import { defineScreenshotScenario } from '@verbb/docs-screenshots/api';
-import { seedTimberDocsFixture } from '../.screenshots/timber/fixtures';
+import { defineScreenshotScenario } from '@verbb/craft-screenshots/api';
+import { seedTimberDocsFixture } from '../../../support/docs/fixtures';
 import {
     createTimberCleanupStep,
     createTimberLogsSquareCropStep,
-} from '../.screenshots/timber/presets';
+} from '../../../support/docs/presets';
 
 let utilityRoute = '/admin/utilities/timber-logs';
 
 export default defineScreenshotScenario({
     id: 'feature-tour-logs',
-    output: '_screenshots/feature-tour/logs.png',
+    output: 'docs/feature-tour/logs.png',
     route: () => utilityRoute,
     viewport: {
         width: 920,
@@ -25,6 +25,15 @@ export default defineScreenshotScenario({
     ],
     preSteps: [
         createTimberCleanupStep(),
+        {
+            type: 'wait',
+            waitFor: {
+                type: 'selector',
+                selector: 'pk-combobox.ti-file-combobox',
+                state: 'visible',
+                timeout: 30000,
+            },
+        },
         // Combobox does not auto-select — pick seeded web.log then wait for rows.
         {
             type: 'evaluate',

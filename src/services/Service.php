@@ -26,12 +26,18 @@ class Service extends Component
     // Public Methods
     // =========================================================================
 
-    public function getLogs(string $logFile): ArrayQuery
+    public function getLogs(string $logFile, ?bool $requireCatalog = null): ArrayQuery
     {
+        $requireCatalog ??= LogFiles::isCataloguedLogPath($logFile);
+
+        if ($requireCatalog && LogFiles::resolveCatalogPath($logFile) === null) {
+            throw new RuntimeException(Craft::t('timber', 'Unable to read the log file. Check its permissions and try again.'));
+        }
+
         $maxBytes = Timber::$plugin?->getSettings()?->getMaxLogReadBytes() ?? 52_428_800;
 
         $compressed = LogFiles::isCompressed($logFile);
-        $generation = $this->_fileGenerationToken($logFile);
+        $generation = $this->_fileGenerationToken($logFile, $requireCatalog);
         $cacheKey = md5(
             'timber.current:' . LogParser::VERSION . ':' . self::MAX_PARSED_ENTRIES . ':'
             . LogParser::cacheKeySuffix($logFile) . ':'
@@ -42,7 +48,16 @@ class Service extends Component
         // Filesystem timestamps have second precision. Wait until both timestamps are
         // stable before caching, so rapid same-size edits cannot reuse an earlier parse.
         $modified = max(@filemtime($logFile) ?: 0, @filectime($logFile) ?: 0);
-        $read = fn() => $this->readLogFile($logFile, $maxBytes);
+        $read = function() use ($logFile, $maxBytes, $requireCatalog) {
+            $previous = $this->_requireCatalogRead;
+            $this->_requireCatalogRead = $requireCatalog;
+
+            try {
+                return $this->readLogFile($logFile, $maxBytes);
+            } finally {
+                $this->_requireCatalogRead = $previous;
+            }
+        };
         $readBytes = $compressed ? $maxBytes : min(@filesize($logFile) ?: 0, $maxBytes);
 
         // Cache serialization duplicates the parsed window in memory. Large windows
@@ -183,29 +198,32 @@ class Service extends Component
 
     protected function openLogFile(string $logFile, int $maxBytes = 0): array
     {
-        if (LogFiles::isCompressed($logFile)) {
-            $handle = @gzopen($logFile, 'rb');
+        $compressed = LogFiles::isCompressed($logFile);
+        $handle = LogFiles::openForReading($logFile, $this->_requireCatalogRead);
 
-            if ($handle === false) {
+        if ($handle === false) {
+            return [null, static fn() => null];
+        }
+
+        if ($compressed) {
+            // Decode through the already verified descriptor. Reopening with gzopen()
+            // would create another path-resolution race after authorization.
+            $filter = @stream_filter_append($handle, 'zlib.inflate', STREAM_FILTER_READ, ['window' => 31]);
+
+            if ($filter === false) {
+                fclose($handle);
                 return [null, static fn() => null];
             }
 
             // Gzip has no cheap tail seek — stream from the start and let readLogFile
             // stop at the byte budget (prefer truncated head over OOM on huge archives).
             return [
-                static fn(int $length) => gzgets($handle, $length),
-                static fn() => gzclose($handle),
+                static fn(int $length) => fgets($handle, $length),
+                static fn() => fclose($handle),
             ];
         }
 
-        $handle = @fopen($logFile, 'rb');
-
-        if ($handle === false) {
-            return [null, static fn() => null];
-        }
-
-        clearstatcache(true, $logFile);
-        $size = @filesize($logFile) ?: 0;
+        $size = fstat($handle)['size'] ?? 0;
 
         // Uncompressed oversized files: parse a tail window so newest entries win.
         if ($maxBytes > 0 && $size > $maxBytes) {
@@ -230,26 +248,38 @@ class Service extends Component
      * Identity for stable-file cache keys, including replacement and metadata changes.
      * Samples head/tail rather than hashing the whole file.
      */
-    private function _fileGenerationToken(string $logFile): string
+    private function _fileGenerationToken(string $logFile, bool $requireCatalog): string
     {
-        clearstatcache(true, $logFile);
-        $size = @filesize($logFile) ?: 0;
-        $mtime = @filemtime($logFile) ?: 0;
-        $ctime = @filectime($logFile) ?: 0;
-        $inode = @fileinode($logFile) ?: 0;
+        $fh = LogFiles::openForReading($logFile, $requireCatalog);
+
+        if ($fh === false) {
+            return 'unreadable';
+        }
+
+        $stat = fstat($fh) ?: [];
+        $size = $stat['size'] ?? 0;
+        $mtime = $stat['mtime'] ?? 0;
+        $ctime = $stat['ctime'] ?? 0;
+        $inode = $stat['ino'] ?? 0;
         $sample = '';
 
-        if ($size > 0 && ($fh = @fopen($logFile, 'rb'))) {
+        if ($size > 0) {
             $sample .= (string)fread($fh, 256);
 
             if ($size > 512) {
                 fseek($fh, $size - 256);
                 $sample .= (string)fread($fh, 256);
             }
-
-            fclose($fh);
         }
+
+        fclose($fh);
 
         return $mtime . ':' . $ctime . ':' . $inode . ':' . $size . ':' . md5($sample);
     }
+
+
+    // Properties
+    // =========================================================================
+
+    private bool $_requireCatalogRead = false;
 }

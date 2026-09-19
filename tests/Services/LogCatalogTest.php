@@ -44,3 +44,79 @@ it('keeps discovered symlink targets accessible with their original log format',
         LogFiles::findAll(true);
     }
 })->with(['plain' => false, 'gzip' => true]);
+
+it('does not discover file or directory symlinks that escape the log root', function() {
+    $logsDirectory = Craft::getAlias('@storage/logs') . '/escaping-symlink-fixture';
+    $externalDirectory = sys_get_temp_dir() . '/timber-external-' . bin2hex(random_bytes(6));
+    mkdir($logsDirectory, 0777, true);
+    mkdir($externalDirectory, 0777, true);
+    $externalFile = $externalDirectory . '/external.log';
+    file_put_contents($externalFile, "2026-09-17 10:00:00 [INFO] External\n");
+    symlink($externalFile, $logsDirectory . '/file-link.log');
+    symlink($externalDirectory, $logsDirectory . '/directory-link');
+
+    try {
+        $paths = array_column(LogFiles::findAll(true), 'path');
+        expect($paths)->not->toContain(realpath($externalFile));
+    } finally {
+        unlink($logsDirectory . '/file-link.log');
+        unlink($logsDirectory . '/directory-link');
+        unlink($externalFile);
+        rmdir($logsDirectory);
+        rmdir($externalDirectory);
+        LogFiles::findAll(true);
+    }
+});
+
+it('rejects a catalog path replaced by a symlink before it can be read', function() {
+    $directory = Craft::getAlias('@storage/logs') . '/replacement-symlink-fixture';
+    $external = sys_get_temp_dir() . '/timber-replacement-' . bin2hex(random_bytes(6)) . '.log';
+    mkdir($directory, 0777, true);
+    $catalogPath = $directory . '/replace.log';
+    file_put_contents($catalogPath, "2026-09-17 10:00:00 [INFO] Safe\n");
+    file_put_contents($external, "2026-09-17 10:00:00 [INFO] External\n");
+    LogFiles::findAll(true);
+    unlink($catalogPath);
+    symlink($external, $catalogPath);
+
+    try {
+        expect(LogFiles::resolveCatalogPath($catalogPath))->toBeNull()
+            ->and(LogFiles::openForReading($catalogPath))->toBeFalse()
+            ->and(file_get_contents($external))->toContain('External');
+    } finally {
+        unlink($catalogPath);
+        unlink($external);
+        rmdir($directory);
+        LogFiles::findAll(true);
+    }
+});
+
+it('rejects a catalog path when an ancestor directory is replaced by a symlink', function() {
+    $root = Craft::getAlias('@storage/logs') . '/ancestor-symlink-fixture';
+    $nested = $root . '/nested';
+    $moved = $root . '/moved';
+    $external = sys_get_temp_dir() . '/timber-ancestor-' . bin2hex(random_bytes(6));
+    mkdir($nested, 0777, true);
+    mkdir($external, 0777, true);
+    $catalogPath = $nested . '/replace.log';
+    file_put_contents($catalogPath, "2026-09-17 10:00:00 [INFO] Safe\n");
+    file_put_contents($external . '/replace.log', "2026-09-17 10:00:00 [INFO] External\n");
+    LogFiles::findAll(true);
+    rename($nested, $moved);
+    symlink($external, $nested);
+
+    try {
+        expect(LogFiles::resolveCatalogPath($catalogPath))->toBeNull()
+            ->and(LogFiles::openForReading($catalogPath))->toBeFalse()
+            ->and(fn() => verbb\timber\Timber::$plugin->getService()->getLogs($catalogPath, true))->toThrow(RuntimeException::class)
+            ->and(file_get_contents($external . '/replace.log'))->toContain('External');
+    } finally {
+        unlink($nested);
+        unlink($moved . '/replace.log');
+        rmdir($moved);
+        rmdir($root);
+        unlink($external . '/replace.log');
+        rmdir($external);
+        LogFiles::findAll(true);
+    }
+});

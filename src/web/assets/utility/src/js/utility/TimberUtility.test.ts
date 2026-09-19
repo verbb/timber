@@ -97,7 +97,7 @@ describe.each(['single', 'all'])('%s log deletion', (mode) => {
         : utility['deleteAllLogs']();
 
     it('clears the loading state and ignores a late failed read after deletion succeeds', async () => {
-        const { utility, request } = makeUtility({ success: true });
+        const { utility, request } = makeUtility({ success: true, deleted: ['/logs/raw.log'] });
         vi.stubGlobal('confirm', () => true);
         Object.assign(Craft, { t: (_category: string, text: string) => text });
         let rejectRead!: (reason: Error) => void;
@@ -115,7 +115,7 @@ describe.each(['single', 'all'])('%s log deletion', (mode) => {
 
     it('recovers from an earlier read error and cancels pending filter requests', async () => {
         vi.useFakeTimers();
-        const { utility, request } = makeUtility({ success: true });
+        const { utility, request } = makeUtility({ success: true, deleted: ['/logs/raw.log'] });
         vi.stubGlobal('confirm', () => true);
         Object.assign(Craft, { t: (_category: string, text: string) => text });
         Object.assign(utility, { error: true, errorMessage: 'Earlier failure' });
@@ -129,7 +129,7 @@ describe.each(['single', 'all'])('%s log deletion', (mode) => {
     });
 
     it('discards a successful read that arrives after deletion', async () => {
-        const { utility, request } = makeUtility({ success: true });
+        const { utility, request } = makeUtility({ success: true, deleted: ['/logs/raw.log'] });
         vi.stubGlobal('confirm', () => true);
         Object.assign(Craft, { t: (_category: string, text: string) => text });
         let resolveRead!: (value: unknown) => void;
@@ -153,7 +153,7 @@ describe.each(['single', 'all'])('%s log deletion', (mode) => {
 });
 
 it('keeps the selected log request active when a different file is deleted', async () => {
-    const { utility, request } = makeUtility({ success: true });
+    const { utility, request } = makeUtility({ success: true, deleted: ['/logs/other.log'] });
     vi.stubGlobal('confirm', () => true);
     Object.assign(Craft, { t: (_category: string, text: string) => text });
     let resolveRead!: (value: unknown) => void;
@@ -171,7 +171,8 @@ it.each(['/logs/raw.log', '/logs/removed.log'])('reconciles partial bulk deletio
     vi.stubGlobal('confirm', () => true);
     Object.assign(Craft, { t: (_category: string, text: string) => text });
     Object.assign(utility, { logFile: selected, proxyLogFiles: [
-        { path: '/logs/raw.log', size: 10 }, { path: '/logs/removed.log', size: 10 },
+        { path: '/logs/raw.log', size: 10, id: 'raw', deletable: true },
+        { path: '/logs/removed.log', size: 10, id: 'removed', deletable: true },
     ] });
     request.mockRejectedValue({ response: { data: {
         success: false, deleted: ['/logs/removed.log'], message: 'Check <directory> permissions.',

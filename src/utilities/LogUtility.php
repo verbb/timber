@@ -4,6 +4,7 @@ namespace verbb\timber\utilities;
 use verbb\timber\Timber;
 use verbb\timber\helpers\LogFiles;
 use verbb\timber\helpers\Plugin;
+use verbb\timber\helpers\RealtimeToken;
 use verbb\timber\models\Settings;
 
 use Craft;
@@ -43,12 +44,14 @@ class LogUtility extends Utility
         $logFiles = LogFiles::visible();
 
         $currentUser = Craft::$app->getUser()->getIdentity();
+        $request = Craft::$app->getRequest();
 
         $componentSettings = [
             'logFiles' => $logFiles,
             'logDirectory' => realpath(Craft::getAlias('@storage/logs')) ?: Craft::getAlias('@storage/logs'),
             'limit' => $settings->paginationLimit,
             'socketPort' => $settings->socketPort,
+            'socketToken' => $currentUser ? RealtimeToken::create($currentUser->id, $request->getHostInfo()) : '',
             'enableRealTimeUpdates' => $settings->enableRealTimeUpdates,
             'canDownload' => (bool)$currentUser?->can('timber-download'),
             'canDelete' => (bool)$currentUser?->can('timber-delete'),

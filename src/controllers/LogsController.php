@@ -50,6 +50,11 @@ class LogsController extends Controller
         }
 
         LogFiles::requireView($logFile);
+        $logFile = LogFiles::resolveCatalogPath($logFile);
+
+        if ($logFile === null) {
+            return $this->asFailure(Craft::t('timber', 'Invalid file.'));
+        }
 
         /* @var \verbb\timber\models\Settings $settings */
         $settings = Timber::$plugin->getSettings();
@@ -63,7 +68,7 @@ class LogsController extends Controller
         $supportsCategory = false;
 
         try {
-            $logQuery = Timber::$plugin->getService()->getLogs($logFile);
+            $logQuery = Timber::$plugin->getService()->getLogs($logFile, true);
         } catch (RuntimeException $e) {
             throw new ServerErrorHttpException($e->getMessage(), 0, $e);
         }
@@ -166,15 +171,16 @@ class LogsController extends Controller
         }
 
         LogFiles::requireView($logFile, $currentUser);
+        $logFile = LogFiles::resolveCatalogPath($logFile);
 
-        $file = @fopen($logFile, 'rb');
-
-        if ($file === false) {
+        if ($logFile === null || ($file = LogFiles::openForReading($logFile)) === false) {
             throw new ServerErrorHttpException(Craft::t('timber', 'Unable to read the log file. Check its permissions and try again.'));
         }
 
+        $fileSize = fstat($file)['size'] ?? 0;
+
         return $this->response->sendStreamAsFile($file, basename($logFile), [
-            'fileSize' => filesize($logFile),
+            'fileSize' => $fileSize,
             'mimeType' => 'text/plain',
         ]);
     }
@@ -205,6 +211,7 @@ class LogsController extends Controller
         $zipPath = Craft::$app->getPath()->getTempPath() . '/' . StringHelper::UUID() . '.zip';
         $zip = new ZipArchive();
         $zipOpened = false;
+        $stagedPaths = [];
 
         try {
             if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
@@ -213,9 +220,40 @@ class LogsController extends Controller
             $zipOpened = true;
 
             $archiveNames = [];
+            $copiedBytes = 0;
 
             foreach ($files as $file) {
-                $basename = basename($file['path']);
+                $path = LogFiles::resolveCatalogPath($file['path']);
+                $source = $path === null ? false : LogFiles::openForReading($path);
+
+                if ($source === false) {
+                    throw new Exception('Cannot read log for archive: ' . basename($file['path']));
+                }
+
+                $stagedPath = tempnam(Craft::$app->getPath()->getTempPath(), 'timber-log-');
+
+                if ($stagedPath === false) {
+                    fclose($source);
+                    throw new Exception('Cannot stage log for archive: ' . basename($file['path']));
+                }
+
+                $stagedPaths[] = $stagedPath;
+
+                if (($staged = @fopen($stagedPath, 'wb')) === false) {
+                    fclose($source);
+                    throw new Exception('Cannot stage log for archive: ' . basename($file['path']));
+                }
+
+                $remainingBytes = self::MAX_DOWNLOAD_BYTES - $copiedBytes;
+                $copied = stream_copy_to_stream($source, $staged, $remainingBytes + 1);
+                fclose($source);
+                fclose($staged);
+
+                if ($copied === false || ($copiedBytes += $copied) > self::MAX_DOWNLOAD_BYTES) {
+                    throw new Exception('Log archive exceeded its size limit while being created.');
+                }
+
+                $basename = basename($path);
                 $name = $basename;
                 $suffix = 2;
 
@@ -227,9 +265,10 @@ class LogsController extends Controller
 
                 $archiveNames[strtolower($name)] = true;
 
-                // Let libzip stream from disk; addFromString() duplicated every log in PHP memory.
-                if (!$zip->addFile($file['path'], $name)) {
-                    throw new Exception('Cannot add log to zip: ' . basename($file['path']));
+                // Libzip defers reads until close(), so archive the private snapshot
+                // rather than reopening the authorized path later.
+                if (!$zip->addFile($stagedPath, $name)) {
+                    throw new Exception('Cannot add log to zip: ' . $basename);
                 }
             }
 
@@ -244,6 +283,10 @@ class LogsController extends Controller
             FileHelper::unlink($zipPath);
 
             throw $e;
+        } finally {
+            foreach ($stagedPaths as $stagedPath) {
+                FileHelper::unlink($stagedPath);
+            }
         }
 
         $response = $this->response->sendFile($zipPath, 'logs.zip');
@@ -273,8 +316,13 @@ class LogsController extends Controller
         }
 
         LogFiles::requireView($logFile, $currentUser);
+        $logFile = LogFiles::resolveCatalogPath($logFile);
 
-        if (file_exists($logFile) && !FileHelper::unlink($logFile)) {
+        if ($logFile === null) {
+            throw new BadRequestHttpException(Craft::t('timber', 'The log file you’re trying to delete does not exist.'));
+        }
+
+        if (!LogFiles::delete($logFile)) {
             $this->response->setStatusCode(500);
 
             return $this->asJson([
@@ -302,10 +350,16 @@ class LogsController extends Controller
         $failed = false;
 
         foreach (LogFiles::visible($currentUser) as $file) {
-            if (file_exists($file['path']) && !FileHelper::unlink($file['path'])) {
+            if (!$file['deletable']) {
+                continue;
+            }
+
+            $path = LogFiles::resolveCatalogPath($file['path']);
+
+            if ($path === null || !LogFiles::delete($path)) {
                 $failed = true;
             } else {
-                $deleted[] = $file['path'];
+                $deleted[] = $path;
             }
         }
 
@@ -319,6 +373,6 @@ class LogsController extends Controller
             ]);
         }
 
-        return $this->asJson(['success' => true]);
+        return $this->asJson(['success' => true, 'deleted' => $deleted]);
     }
 }

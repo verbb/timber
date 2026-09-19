@@ -65,16 +65,26 @@ class LogFiles
 
         $files = [];
         $logsDir = Craft::getAlias('@storage/logs');
+        $resolvedLogsDir = is_string($logsDir) ? realpath($logsDir) : false;
 
-        if ($logsDir && is_dir($logsDir)) {
-            $paths = FileHelper::findFiles($logsDir, [
+        if ($resolvedLogsDir !== false && is_dir($resolvedLogsDir)) {
+            $paths = FileHelper::findFiles($resolvedLogsDir, [
                 'only' => ['*.log', '*.log.*', '*.log-*', '*.txt', '*.txt.*', '*.txt-*', '*.gz'],
+                // Never recurse through directory links. A linked file is considered
+                // below only when its canonical target remains inside the log root.
+                'filter' => static fn(string $path): ?bool => is_dir($path) && is_link($path) ? false : null,
             ]);
 
             sort($paths);
 
             foreach ($paths as $path) {
                 if (!self::_isDiscoverableLogFilename(basename($path))) {
+                    continue;
+                }
+
+                $resolved = realpath($path);
+
+                if ($resolved === false || !self::_isWithinDirectory($resolved, $resolvedLogsDir)) {
                     continue;
                 }
 
@@ -108,8 +118,9 @@ class LogFiles
 
         foreach (self::findAll($refresh) as $file) {
             $watchable = $file['watchable'] ?? (!$file['compressed'] && str_ends_with($file['path'], '.log'));
+            $path = self::_currentCatalogPath($file);
 
-            if (!$watchable) {
+            if (!$watchable || $path === null) {
                 continue;
             }
 
@@ -118,7 +129,7 @@ class LogFiles
                 continue;
             }
 
-            $paths[] = $file['path'];
+            $paths[] = $path;
         }
 
         sort($paths);
@@ -152,13 +163,17 @@ class LogFiles
         $visible = [];
 
         foreach (self::findAll() as $file) {
-            if (!self::_canViewFile($file, $user)) {
+            $path = self::_currentCatalogPath($file);
+
+            if ($path === null || !self::_canViewFile($file, $user)) {
                 continue;
             }
 
             $visible[] = [
-                'path' => $file['path'],
-                'size' => $file['size'],
+                'path' => $path,
+                'size' => filesize($path) ?: 0,
+                'id' => self::identifier($path),
+                'deletable' => self::canDelete($path),
             ];
         }
 
@@ -186,7 +201,105 @@ class LogFiles
     {
         // The catalog is the allowlist: default `@storage/logs` discovery, plus anything
         // added (or minus anything removed) via EVENT_MODIFY_LOG_FILES.
+        $file = self::_catalogFile($path);
+
+        return $file !== null && self::_currentCatalogPath($file) !== null;
+    }
+
+    /**
+     * Return the current canonical path for a catalogued file, or null when it has
+     * disappeared or changed identity (for example, was replaced by a symlink).
+     */
+    public static function resolveCatalogPath(string $path): ?string
+    {
+        $file = self::_catalogFile($path);
+
+        return $file === null ? null : self::_currentCatalogPath($file);
+    }
+
+    /** Whether the submitted path names an entry in the cached catalog, even if stale. */
+    public static function isCataloguedLogPath(string $path): bool
+    {
         return self::_catalogFile($path) !== null;
+    }
+
+    /**
+     * Open a catalogued regular file and verify the descriptor still represents the
+     * same filesystem entry. Callers should perform all reads through this handle.
+     *
+     * @return resource|false
+     */
+    public static function openForReading(string $path, bool $requireCatalog = true)
+    {
+        $path = $requireCatalog ? self::resolveCatalogPath($path) : realpath($path);
+
+        if (!is_string($path)) {
+            return false;
+        }
+
+        clearstatcache(true, $path);
+        $before = @lstat($path);
+
+        if (!self::_isRegularStat($before)) {
+            return false;
+        }
+
+        $handle = @fopen($path, 'rb');
+
+        if ($handle === false) {
+            return false;
+        }
+
+        $opened = @fstat($handle);
+        clearstatcache(true, $path);
+        $after = @lstat($path);
+
+        if (!self::_isSameFile($before, $opened) || !self::_isSameFile($opened, $after)
+            || realpath($path) !== $path) {
+            fclose($handle);
+            return false;
+        }
+
+        return $handle;
+    }
+
+    /** Opaque identifier used by realtime invalidations instead of filesystem paths. */
+    public static function identifier(string $path): string
+    {
+        // Keep this lexical: resolving again could make an invalidation follow a
+        // concurrently replaced directory to a different filesystem location.
+        $path = str_replace('\\', '/', $path);
+        $signed = Craft::$app->getSecurity()->hashData("timber-log\0" . $path);
+
+        return substr(hash('sha256', $signed), 0, 32);
+    }
+
+    /**
+     * Delete only direct children of the canonical log root. PHP has no portable
+     * unlinkat()/directory-descriptor API, so nested or external paths cannot be
+     * unlinked without an ancestor-directory replacement race.
+     */
+    public static function delete(string $path): bool
+    {
+        $path = self::resolveCatalogPath($path);
+
+        if ($path === null || !self::canDelete($path)) {
+            return false;
+        }
+
+        clearstatcache(true, $path);
+        $stat = @lstat($path);
+
+        return self::_isRegularStat($stat) && realpath($path) === $path && FileHelper::unlink($path);
+    }
+
+    public static function canDelete(string $path): bool
+    {
+        $path = self::resolveCatalogPath($path);
+        $logsDir = realpath(Craft::getAlias('@storage/logs'));
+
+        return $path !== null && $logsDir !== false
+            && dirname(str_replace('\\', '/', $path)) === rtrim(str_replace('\\', '/', $logsDir), '/');
     }
 
     public static function isCompressed(string $path): bool
@@ -293,6 +406,39 @@ class LogFiles
         }
 
         return str_replace('\\', '/', $path);
+    }
+
+    private static function _currentCatalogPath(array $file): ?string
+    {
+        $path = $file['path'];
+        clearstatcache(true, $path);
+        $resolved = realpath($path);
+
+        if ($resolved === false || str_replace('\\', '/', $resolved) !== str_replace('\\', '/', $path)
+            || !is_file($path) || is_link($path)) {
+            return null;
+        }
+
+        return $resolved;
+    }
+
+    private static function _isWithinDirectory(string $path, string $directory): bool
+    {
+        $path = rtrim(self::_normalizePath($path), '/');
+        $directory = rtrim(self::_normalizePath($directory), '/');
+
+        return $path === $directory || str_starts_with($path, $directory . '/');
+    }
+
+    private static function _isRegularStat(array|false $stat): bool
+    {
+        return is_array($stat) && (($stat['mode'] & 0170000) === 0100000);
+    }
+
+    private static function _isSameFile(array|false $left, array|false $right): bool
+    {
+        return self::_isRegularStat($left) && self::_isRegularStat($right)
+            && $left['dev'] === $right['dev'] && $left['ino'] === $right['ino'];
     }
 
     private static function _passesConfig(string $stem): bool
