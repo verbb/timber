@@ -10168,16 +10168,16 @@
         },
         {
             "name": "verbb/base",
-            "version": "3.0.14",
+            "version": "3.0.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/verbb/verbb-base.git",
-                "reference": "c847f893fa7278413b6554324447137b815e7d3e"
+                "reference": "1d53b2b2dbb51a9dcb005bde5421b88fde620ae5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/verbb/verbb-base/zipball/c847f893fa7278413b6554324447137b815e7d3e",
-                "reference": "c847f893fa7278413b6554324447137b815e7d3e",
+                "url": "https://api.github.com/repos/verbb/verbb-base/zipball/1d53b2b2dbb51a9dcb005bde5421b88fde620ae5",
+                "reference": "1d53b2b2dbb51a9dcb005bde5421b88fde620ae5",
                 "shasum": ""
             },
             "require": {
@@ -10214,7 +10214,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-14T11:53:23+00:00"
+            "time": "2026-09-27T11:35:17+00:00"
         },
         {
             "name": "verbb/parallel-process",
@@ -10289,13 +10289,13 @@
             "dist": {
                 "type": "path",
                 "url": "../../..",
-                "reference": "72fd512215d1e2b181628d8f0f3003ff48754557"
+                "reference": "53cb92a87ccc48245145a04e144ead59f295edc9"
             },
             "require": {
                 "craftcms/cms": "^5.0.0",
                 "nystudio107/craft-plugin-vite": "^5.0.0",
                 "php": "^8.2",
-                "verbb/base": "^3.0.0",
+                "verbb/base": "^3.0.18",
                 "verbb/parallel-process": "^1.0.3",
                 "workerman/phpsocket.io": "^v1.1.16",
                 "workerman/phpsocket.io-emitter": "^v1.0.2",

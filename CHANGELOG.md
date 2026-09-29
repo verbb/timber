@@ -14,6 +14,7 @@
 - Rebuild the Logs utility UI on [Plugin Kit](https://docs.verbb.io/plugin-kit/web/) with a searchable log picker and improved accessibility and responsive behaviour.
 - Improve large-log performance with bounded reads, parsing, caching, filtering, pagination, and streamed downloads.
 - Improve real-time updates for rotated, replaced, new, truncated, and removed log files, and load the live-update connection only when enabled.
+- Route plugin settings through the plugin’s authorized settings controller.
 
 ### Fixed
 - Fixed a high-severity object injection vulnerability.
