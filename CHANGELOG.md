@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.0 - 2026-09-
+## 2.1.0 - 2026-09-29
 
 ### Added
 - Add per-log-file view permissions, plus optional include/exclude lists, so users can be limited to specific log files ([#3](https://github.com/verbb/timber/issues/3)).
