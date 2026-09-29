@@ -1,14 +1,16 @@
-Timber makes even the messiest log files easier to work with. Browse, search and monitor them from Craft’s control panel — even the massive ones — so finding the useful line doesn’t mean wrestling with raw text or reaching for shell access.
+Timber makes application logs easier to work with. Browse, search and monitor them from the control panel so finding the useful line does not mean wrestling with raw text or reaching for shell access.
 
-When something breaks, the answer is often in the logs; the trick is finding it. Timber turns even large files into a responsive, searchable view, with filters and sorting to zero in on the entries that explain what happened.
+When something breaks, the answer is often in the logs; the trick is finding it. Timber turns large files into a responsive, searchable view, with filters and sorting to narrow the entries that explain what happened.
 
 ## Features
 
-- **Full-text search:** Locate a message without manually scanning the raw file.
-- **Level and category filters:** Focus on errors, warnings, or a relevant application area.
-- **Useful sorting:** Order entries by date, level, category, or message.
-- **Update notifications:** Receive a real-time notice when the viewed log changes on hosts that support the required command-line tools, then reload to inspect the new entries.
-- **Large-file support:** Use bounded parsing and pagination instead of loading an entire log into memory.
-- **Log downloads:** Save one file or collect available logs into a ZIP.
-- **Permissioned cleanup:** Remove old logs without granting broad server access.
-- **Stay in the control panel:** Inspect Craft web, queue, PHP, rotated, compressed and third-party logs in one place, download one file or a ZIP of them all, and clear old logs through separately permissioned actions.
+- Inspect Craft web and queue logs, PHP errors, third-party logs, rotated files, compressed archives and plain-text logs from one utility.
+- Find the relevant file quickly, including on smaller screens and with keyboard navigation.
+- Locate a message without manually scanning the raw file.
+- Focus on relevant levels or categories and order entries by date, level, category or message.
+- Recognise common Craft, plugin and Monolog formats while keeping unmatched lines visible.
+- Use bounded reads, parsing, caching and pagination instead of loading an entire log into memory.
+- Follow changes to active, rotated, replaced or truncated logs when live updates are enabled and the host supports the required tools.
+- Decide which users can view individual files and separately control downloading or deleting logs.
+- Save one file, collect available logs into a ZIP or remove old files without broad server access.
+- Add specialised log files or register custom parsers for project-specific formats.
