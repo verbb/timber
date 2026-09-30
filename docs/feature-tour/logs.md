@@ -6,7 +6,7 @@ Timber lets you inspect Craft's log files from the control panel. Choose a file,
 
 The Timber log screen is the interface for viewing logs. It's built as a Craft Utility, to sit alongside other similar tools.
 
-![Timber Logs utility with level filters and paginated entries](../../screenshots/output/docs/feature-tour/logs.png)
+![Timber Logs utility with level filters and paginated entries](../../screenshots/timber-logs.png)
 
 The interface allows you to pick a log file and see its size. Once picked, you'll see a table of all log entries for the file which are sortable, filterable and searchable. For example, almost all log files record a "level", which represent the type of error it is (info, warning, error). Some other log files also contain "category" information, which is often used by plugins to scope logs to certain plugins or services.
 

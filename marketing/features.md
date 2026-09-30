@@ -7,7 +7,7 @@ Browse, search and monitor application logs from the Craft control panel, so fin
 
 Bring Craft web and queue logs, PHP errors, third-party logs, rotated files, compressed archives and plain-text logs into one responsive interface. Timber recognises common formats without hiding unmatched lines, so unusual output remains available when it matters.
 
-![A populated Craft application log in Timber, with levels, timestamps, categories and messages.](../screenshots/output/docs/feature-tour/logs.png)
+![A populated Craft application log in Timber, with levels, timestamps, categories and messages.](../screenshots/timber-logs.png)
 <!-- feature-section-end -->
 
 <!-- feature-section -->
