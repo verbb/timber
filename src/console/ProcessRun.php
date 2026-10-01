@@ -71,7 +71,7 @@ class ProcessRun implements RunInterface
             $this->dispatch(RunEvent::STARTED, new RunEvent($this));
 
             $this->process->start(
-                function ($type, $data) {
+                function($type, $data) {
                     $this->last = $data;
 
                     $this->dispatch(RunEvent::UPDATED, new RunEvent($this));

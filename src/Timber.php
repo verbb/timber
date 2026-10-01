@@ -41,7 +41,7 @@ class Timber extends Plugin
         parent::init();
 
         self::$plugin = $this;
-        
+
         if (Craft::$app->getRequest()->getIsCpRequest()) {
             $this->_registerCpRoutes();
             $this->_registerUtilities();

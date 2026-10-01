@@ -198,6 +198,7 @@ class LogsController extends Controller
         }
 
         $files = LogFiles::visible($currentUser);
+
         if ($files === []) {
             throw new BadRequestHttpException(Craft::t('timber', 'No log files are available to download.'));
         }
