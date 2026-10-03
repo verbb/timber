@@ -6,6 +6,7 @@ use verbb\timber\console\controllers\LogsController;
 use verbb\timber\helpers\LogFiles;
 use verbb\timber\helpers\RealtimeToken;
 use verbb\timber\realtime\AuthenticatedEngine;
+use verbb\timber\realtime\RealtimeEventBus;
 use yii\helpers\StringHelper;
 
 it('binds realtime tokens to their signed origin and expiry', function() {
@@ -59,4 +60,28 @@ it('uses stable opaque identifiers for realtime file invalidations', function() 
     $controller = new LogsController('logs', Timber::$plugin);
     $payload = (new ReflectionMethod($controller, '_invalidationPayload'))->invoke($controller, $path);
     expect($payload)->toBe(['id' => $identifier]);
+});
+
+it('accepts only signed and schema-valid local realtime events', function() {
+    $identifier = LogFiles::identifier('/private/storage/logs/web.log');
+    $message = RealtimeEventBus::create($identifier);
+    $expired = StringHelper::base64UrlEncode(Craft::$app->getSecurity()->hashData(Json::encode([
+        'purpose' => 'timber-realtime-event',
+        'event' => 'logUpdate',
+        'id' => $identifier,
+        'expires' => time() - 1,
+    ])));
+    $unexpectedField = StringHelper::base64UrlEncode(Craft::$app->getSecurity()->hashData(Json::encode([
+        'purpose' => 'timber-realtime-event',
+        'event' => 'logUpdate',
+        'id' => $identifier,
+        'expires' => time() + 30,
+        'content' => 'not accepted',
+    ])));
+
+    expect(RealtimeEventBus::validate($message))->toBe(['id' => $identifier])
+        ->and(RealtimeEventBus::validate($message . 'tampered'))->toBeNull()
+        ->and(RealtimeEventBus::validate($expired))->toBeNull()
+        ->and(RealtimeEventBus::validate($unexpectedField))->toBeNull()
+        ->and(RealtimeEventBus::validate(serialize(['id' => $identifier])))->toBeNull();
 });

@@ -5,6 +5,7 @@ use verbb\timber\Timber;
 use verbb\timber\helpers\LogFiles;
 use verbb\timber\models\Settings;
 use verbb\timber\realtime\AuthenticatedSocketIO;
+use verbb\timber\realtime\RealtimeEventBus;
 
 use Craft;
 use craft\console\Controller;
@@ -14,9 +15,6 @@ use yii\console\ExitCode;
 
 use Throwable;
 
-use Channel\Server;
-use Emitter;
-use PHPSocketIO\ChannelAdapter;
 use Symfony\Component\Process\Process;
 use Workerman\Worker;
 
@@ -37,15 +35,23 @@ class LogsController extends Controller
         $settings = Timber::$plugin->getSettings();
         $socketPort = $settings->socketPort;
 
-        // The event transport is shared only by local workers.
-        new Server('127.0.0.1');
         $io = new AuthenticatedSocketIO();
         $worker = new Worker('SocketIO://127.0.0.1:' . $socketPort);
         $worker->name = 'PHPSocketIO';
+        $worker->count = 1;
         $io->attach($worker);
 
-        $io->on('workerStart', function() use ($io) {
-            $io->adapter(ChannelAdapter::class);
+        $eventWorker = null;
+
+        $io->on('workerStart', function() use ($io, &$eventWorker): void {
+            $eventWorker = RealtimeEventBus::createWorker(static function(array $payload) use ($io): void {
+                $io->emit('logUpdate', $payload);
+            });
+            $eventWorker->listen();
+        });
+
+        $io->on('workerStop', static function() use (&$eventWorker): void {
+            $eventWorker?->unlisten();
         });
 
         Worker::runAll();
@@ -134,7 +140,7 @@ class LogsController extends Controller
         $this->stdout(' → ' . $file . PHP_EOL, Console::FG_GREY);
 
         // Only invalidate; log bodies are fetched through the authorised HTTP action.
-        (new Emitter())->emit('logUpdate', $this->_invalidationPayload($file));
+        RealtimeEventBus::publish($this->_invalidationPayload($file)['id']);
     }
 
     /** Keep realtime messages free of log content; authorized clients refetch it. */
