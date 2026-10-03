@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Fixed
+- Fixed a low-severity sensitive information exposure vulnerability.
 - Fixed a low-severity deserialization of untrusted data vulnerability.
 
 ## 2.1.1 - 2026-10-02

@@ -160,24 +160,22 @@ class LogFiles
     public static function visible(?User $user = null): array
     {
         $user = $user ?? Craft::$app->getUser()->getIdentity();
-        $visible = [];
 
-        foreach (self::findAll() as $file) {
-            $path = self::_currentCatalogPath($file);
+        return self::_visible($user);
+    }
 
-            if ($path === null || !self::_canViewFile($file, $user)) {
-                continue;
+    /** Resolve visibility against a fresh permission snapshot, bypassing Craft's process cache. */
+    public static function visibleForPermissions(User $user, array $permissions, bool $refresh = false): array
+    {
+        $permissionLookup = [];
+
+        foreach ($permissions as $permission) {
+            if (is_string($permission) && $permission !== '') {
+                $permissionLookup[strtolower($permission)] = true;
             }
-
-            $visible[] = [
-                'path' => $path,
-                'size' => filesize($path) ?: 0,
-                'id' => self::identifier($path),
-                'deletable' => self::canDelete($path),
-            ];
         }
 
-        return $visible;
+        return self::_visible($user, $permissionLookup, $refresh);
     }
 
     public static function canView(string $path, ?User $user = null): bool
@@ -307,7 +305,33 @@ class LogFiles
         return self::_catalogFile($path)['compressed'] ?? str_ends_with(strtolower($path), '.gz');
     }
 
-    private static function _canViewFile(array $file, ?User $user): bool
+
+    // Private Methods
+    // =========================================================================
+
+    private static function _visible(?User $user, ?array $permissionLookup = null, bool $refresh = false): array
+    {
+        $visible = [];
+
+        foreach (self::findAll($refresh) as $file) {
+            $path = self::_currentCatalogPath($file);
+
+            if ($path === null || !self::_canViewFile($file, $user, $permissionLookup)) {
+                continue;
+            }
+
+            $visible[] = [
+                'path' => $path,
+                'size' => filesize($path) ?: 0,
+                'id' => self::identifier($path),
+                'deletable' => self::canDelete($path),
+            ];
+        }
+
+        return $visible;
+    }
+
+    private static function _canViewFile(array $file, ?User $user, ?array $permissionLookup = null): bool
     {
         if (!$user) {
             return false;
@@ -323,7 +347,16 @@ class LogFiles
         // stems that appear later). File-specific grants only apply when the
         // parent is not granted. Users with neither parent nor a matching nested grant
         // are denied — do not fail open to every config-visible file.
-        if ($user->admin || $user->can('timber-viewLogs')) {
+        if ($user->admin || Craft::$app->getEdition() === Craft::Solo) {
+            return true;
+        }
+
+        if ($permissionLookup !== null) {
+            return isset($permissionLookup['timber-viewlogs'])
+                || isset($permissionLookup[strtolower(self::viewPermission($stem))]);
+        }
+
+        if ($user->can('timber-viewLogs')) {
             return true;
         }
 

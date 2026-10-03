@@ -45,7 +45,7 @@ class LogsController extends Controller
 
         $io->on('workerStart', function() use ($io, &$eventWorker): void {
             $eventWorker = RealtimeEventBus::createWorker(static function(array $payload) use ($io): void {
-                $io->emit('logUpdate', $payload);
+                $io->emitLogUpdate($payload);
             });
             $eventWorker->listen();
         });

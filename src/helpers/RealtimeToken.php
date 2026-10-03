@@ -27,8 +27,13 @@ class RealtimeToken
 
     public static function validate(string $token, string $origin): bool
     {
+        return self::getUserId($token, $origin) !== null;
+    }
+
+    public static function getUserId(string $token, string $origin): ?int
+    {
         if ($token === '' || $origin === '') {
-            return false;
+            return null;
         }
 
         try {
@@ -36,21 +41,28 @@ class RealtimeToken
             $payload = Craft::$app->getSecurity()->validateData($signed);
 
             if ($payload === false) {
-                return false;
+                return null;
             }
 
             $claims = Json::decode($payload);
         } catch (Throwable) {
-            return false;
+            return null;
         }
 
-        return is_array($claims)
-            && ($claims['purpose'] ?? null) === self::PURPOSE
-            && is_int($claims['userId'] ?? null) && $claims['userId'] > 0
-            && is_int($claims['expires'] ?? null) && $claims['expires'] >= time()
-            && $claims['expires'] <= time() + self::LIFETIME
-            && is_string($claims['origin'] ?? null)
-            && hash_equals($claims['origin'], self::_normalizeOrigin($origin));
+        $now = time();
+
+        if (!is_array($claims)
+            || ($claims['purpose'] ?? null) !== self::PURPOSE
+            || !is_int($claims['userId'] ?? null) || $claims['userId'] <= 0
+            || !is_int($claims['expires'] ?? null) || $claims['expires'] < $now
+            || $claims['expires'] > $now + self::LIFETIME
+            || !is_string($claims['origin'] ?? null)
+            || !hash_equals($claims['origin'], self::_normalizeOrigin($origin))
+        ) {
+            return null;
+        }
+
+        return $claims['userId'];
     }
 
     private static function _normalizeOrigin(string $origin): string
