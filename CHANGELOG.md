@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.1.2 - 2026-10-05
 
 ### Fixed
 - Fixed a low-severity sensitive information exposure vulnerability.
