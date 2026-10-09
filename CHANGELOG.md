@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed a low-severity information disclosure vulnerability.
+
 ## 2.1.3 - 2026-10-07
 
 ### Changed

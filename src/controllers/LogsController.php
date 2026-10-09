@@ -45,11 +45,12 @@ class LogsController extends Controller
         $levels = $this->request->getParam('levels');
         $categories = $this->request->getParam('categories');
 
+        LogFiles::requireView($logFile);
+
         if (!LogFiles::isAccessibleLogPath($logFile)) {
             return $this->asFailure(Craft::t('timber', 'Invalid file.'));
         }
 
-        LogFiles::requireView($logFile);
         $logFile = LogFiles::resolveCatalogPath($logFile);
 
         if ($logFile === null) {
@@ -159,11 +160,6 @@ class LogsController extends Controller
         $this->requirePermission('utility:timber-logs');
 
         $logFile = $this->request->getRequiredParam('file');
-
-        if (!LogFiles::isAccessibleLogPath($logFile)) {
-            throw new BadRequestHttpException(Craft::t('timber', 'The log file you’re trying to download does not exist.'));
-        }
-
         $currentUser = static::currentUser();
 
         if (!$currentUser || !$currentUser->can('timber-download')) {
@@ -171,6 +167,11 @@ class LogsController extends Controller
         }
 
         LogFiles::requireView($logFile, $currentUser);
+
+        if (!LogFiles::isAccessibleLogPath($logFile)) {
+            throw new BadRequestHttpException(Craft::t('timber', 'The log file you’re trying to download does not exist.'));
+        }
+
         $logFile = LogFiles::resolveCatalogPath($logFile);
 
         if ($logFile === null || ($file = LogFiles::openForReading($logFile)) === false) {
@@ -305,11 +306,6 @@ class LogsController extends Controller
         $this->requirePermission('utility:timber-logs');
 
         $logFile = $this->request->getRequiredParam('file');
-
-        if (!LogFiles::isAccessibleLogPath($logFile)) {
-            throw new BadRequestHttpException(Craft::t('timber', 'The log file you’re trying to delete does not exist.'));
-        }
-
         $currentUser = static::currentUser();
 
         if (!$currentUser || !$currentUser->can('timber-delete')) {
@@ -317,6 +313,11 @@ class LogsController extends Controller
         }
 
         LogFiles::requireView($logFile, $currentUser);
+
+        if (!LogFiles::isAccessibleLogPath($logFile)) {
+            throw new BadRequestHttpException(Craft::t('timber', 'The log file you’re trying to delete does not exist.'));
+        }
+
         $logFile = LogFiles::resolveCatalogPath($logFile);
 
         if ($logFile === null) {

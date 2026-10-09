@@ -53,6 +53,28 @@ it('enforces real persisted file and action permissions for direct requests', fu
                 expect(fn() => $controller->runAction($action))->toThrow(ForbiddenHttpException::class);
             }
         }
+
+        $missingFile = Craft::getAlias('@storage/logs') . '/missing-private.log';
+        $oracleCases = [
+            ['index', []],
+            ['download', ['timber-download']],
+            ['delete', ['timber-delete']],
+        ];
+
+        foreach ($oracleCases as [$action, $actionPermissions]) {
+            Craft::$app->getUserPermissions()->saveUserPermissions($user->id, ['accessCp', 'utility:timber-logs', ...$actionPermissions]);
+            Craft::$app->getUser()->setIdentity(User::find()->id($user->id)->status(null)->one());
+
+            foreach ([$file, $missingFile] as $requestedFile) {
+                CpRequestContext::activate('actions/timber/logs/' . $action, 'POST', true);
+                Craft::$app->getRequest()->setBodyParams(['file' => $requestedFile]);
+                $controller = new LogsController('logs', Timber::$plugin);
+                $controller->enableCsrfValidation = false;
+
+                expect(fn() => $controller->runAction($action))
+                    ->toThrow(ForbiddenHttpException::class, 'User not authorized to view this log.');
+            }
+        }
     } finally {
         Craft::$app->set('request', $previousRequest);
         Craft::$app->getElements()->deleteElement($user, true);
