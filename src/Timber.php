@@ -8,6 +8,7 @@ use verbb\timber\utilities\LogUtility;
 
 use Craft;
 use craft\base\Plugin;
+use craft\enums\CmsEdition;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterUserPermissionsEvent;
@@ -47,7 +48,7 @@ class Timber extends Plugin
             $this->_registerUtilities();
         }
 
-        if (Craft::$app->getEdition() !== Craft::Solo) {
+        if (Craft::$app->edition !== CmsEdition::Solo) {
             $this->_registerPermissions();
         }
     }

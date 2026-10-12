@@ -7,6 +7,7 @@ use verbb\timber\models\Settings;
 
 use Craft;
 use craft\elements\User;
+use craft\enums\CmsEdition;
 use craft\helpers\FileHelper;
 
 use yii\base\Event;
@@ -347,7 +348,7 @@ class LogFiles
         // stems that appear later). File-specific grants only apply when the
         // parent is not granted. Users with neither parent nor a matching nested grant
         // are denied — do not fail open to every config-visible file.
-        if ($user->admin || Craft::$app->getEdition() === Craft::Solo) {
+        if ($user->admin || Craft::$app->edition === CmsEdition::Solo) {
             return true;
         }
 
