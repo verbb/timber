@@ -10168,16 +10168,16 @@
         },
         {
             "name": "verbb/base",
-            "version": "3.0.18",
+            "version": "3.0.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/verbb/verbb-base.git",
-                "reference": "1d53b2b2dbb51a9dcb005bde5421b88fde620ae5"
+                "reference": "0b60c166a79e2762aa968e062dc84ca6c0a9406e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/verbb/verbb-base/zipball/1d53b2b2dbb51a9dcb005bde5421b88fde620ae5",
-                "reference": "1d53b2b2dbb51a9dcb005bde5421b88fde620ae5",
+                "url": "https://api.github.com/repos/verbb/verbb-base/zipball/0b60c166a79e2762aa968e062dc84ca6c0a9406e",
+                "reference": "0b60c166a79e2762aa968e062dc84ca6c0a9406e",
                 "shasum": ""
             },
             "require": {
@@ -10214,7 +10214,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-09-27T11:35:17+00:00"
+            "time": "2026-10-04T21:22:12+00:00"
         },
         {
             "name": "verbb/parallel-process",
@@ -10285,17 +10285,17 @@
         },
         {
             "name": "verbb/timber",
-            "version": "2.1.0",
+            "version": "2.1.4",
             "dist": {
                 "type": "path",
                 "url": "../../..",
-                "reference": "53cb92a87ccc48245145a04e144ead59f295edc9"
+                "reference": "8540034515ad4139a75a35f37a66fbfcda858ade"
             },
             "require": {
                 "craftcms/cms": "^5.0.0",
                 "nystudio107/craft-plugin-vite": "^5.0.0",
                 "php": "^8.2",
-                "verbb/base": "^3.0.18",
+                "verbb/base": "^3.0.20",
                 "verbb/parallel-process": "^1.0.3",
                 "workerman/phpsocket.io": "^v1.1.16",
                 "workerman/phpsocket.io-emitter": "^v1.0.2",
@@ -10345,7 +10345,7 @@
                     "homepage": "https://verbb.io"
                 }
             ],
-            "description": "View Craft application logs in the control panel — filter, search, and stream in real time.",
+            "description": "A Craft CMS utility for browsing, searching and monitoring application logs.",
             "keywords": [
                 "cms",
                 "craft",
@@ -11529,5 +11529,5 @@
     "platform-overrides": {
         "php": "8.2.0"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
