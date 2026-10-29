@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8bcf55604dd49337e648571040165bae",
+    "content-hash": "92c9a70b50f4124f7327525775b83f9a",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -10285,11 +10285,11 @@
         },
         {
             "name": "verbb/timber",
-            "version": "2.1.4",
+            "version": "2.1.5",
             "dist": {
                 "type": "path",
                 "url": "../../..",
-                "reference": "8540034515ad4139a75a35f37a66fbfcda858ade"
+                "reference": "1ca47b516bf6e878156f9124c0ea73922b968181"
             },
             "require": {
                 "craftcms/cms": "^5.0.0",
@@ -11527,7 +11527,8 @@
     "platform": {},
     "platform-dev": {},
     "platform-overrides": {
-        "php": "8.2.0"
+        "php": "8.2.0",
+        "php-64bit": "8.2.0"
     },
     "plugin-api-version": "2.6.0"
 }
