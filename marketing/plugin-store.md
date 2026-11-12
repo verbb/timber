@@ -1,6 +1,6 @@
 Timber makes application logs easier to work with. Browse, search and monitor them from the control panel so finding the useful line does not mean wrestling with raw text or reaching for shell access.
 
-When something breaks, the answer is often in the logs; the trick is finding it. Timber turns large files into a responsive, searchable view, with filters and sorting to narrow the entries that explain what happened.
+When something breaks, the answer is often in the logs, but finding it can be the hard part. Timber turns large files into a responsive, searchable view, with filters and sorting to narrow the entries that explain what happened.
 
 ## Features
 
@@ -11,6 +11,6 @@ When something breaks, the answer is often in the logs; the trick is finding it.
 - Recognise common Craft, plugin and Monolog formats while keeping unmatched lines visible.
 - Use bounded reads, parsing, caching and pagination instead of loading an entire log into memory.
 - Follow changes to active, rotated, replaced or truncated logs when live updates are enabled and the host supports the required tools.
-- Decide which users can view individual files and separately control downloading or deleting logs.
+- Decide who can view individual files and separately control downloading or deleting logs.
 - Save one file, collect available logs into a ZIP or remove old files without broad server access.
 - Add specialised log files or register custom parsers for project-specific formats.
