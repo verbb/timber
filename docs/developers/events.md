@@ -1,5 +1,6 @@
 # Events
-Timber provides a collection of events for extending its functionality. Modules and plugins can register event listeners, typically in their `init()` methods, to modify Timber’s behaviour.
+
+Timber provides events for extending its functionality. Modules and plugins can register event listeners, typically in their `init()` methods, to change Timber’s behaviour.
 
 ## Log File Events
 
