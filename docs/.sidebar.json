@@ -14,7 +14,8 @@
         "collapsable": false,
         "children": [
             "feature-tour/logs",
-            "feature-tour/real-time-logs"
+            "feature-tour/real-time-logs",
+            "feature-tour/permissions"
         ]
     },
     {
