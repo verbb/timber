@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.1.8 - 2026-11-24
 
 ### Changed
 - The log viewer now tells an empty log file apart from a search or filter that matches nothing, and offers a “Clear filters” button for the latter.
