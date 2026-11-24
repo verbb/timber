@@ -1,0 +1,2 @@
+var e=globalThis.HTMLElement!==void 0&&Object.prototype.hasOwnProperty.call(globalThis.HTMLElement.prototype,`popover`),t=[`pk-icon`,`pk-button`,`pk-combobox`,`pk-input`,`pk-spinner`,`pk-dropdown-menu`,`pk-dropdown-item`,`pk-dropdown-separator`,`pk-dropdown-label`,`pk-option`,`pk-state-panel`];export{e as n,t};
+//# sourceMappingURL=timberPkComponents-nCUqk1sF.js.map

@@ -12,4 +12,5 @@ export const TIMBER_PK_COMPONENTS = [
     'pk-dropdown-separator',
     'pk-dropdown-label',
     'pk-option',
+    'pk-state-panel',
 ] as const;

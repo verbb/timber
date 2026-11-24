@@ -778,7 +778,7 @@ export class TimberUtility {
         }
 
         if (!this.logs.length) {
-            this.bodyPane.appendChild(this.emptyPane(Craft.t('timber', 'No results')));
+            this.bodyPane.appendChild(this.noEntriesPane());
             if (this.pendingUpdates) {
                 const updates = document.createElement('button');
                 updates.type = 'button';
@@ -818,6 +818,55 @@ export class TimberUtility {
         span.textContent = text;
         pane.appendChild(span);
         return pane;
+    }
+
+    /** Search text or a narrowed level/category selection. Null facets mean unrestricted. */
+    private hasActiveFilters(): boolean {
+        return this.search !== '' || this.levels !== null || this.categories !== null;
+    }
+
+    /** An empty file and filters that match nothing need different next steps. */
+    private noEntriesPane(): HTMLElement {
+        const pane = document.createElement('div');
+        pane.className = 'timber-loading-pane';
+
+        const panel = document.createElement('pk-state-panel');
+        panel.className = 'ti-state-panel';
+
+        if (this.hasActiveFilters()) {
+            panel.setAttribute('icon', 'magnifying-glass');
+            panel.setAttribute('heading', Craft.t('timber', 'No log entries match'));
+            panel.append(Craft.t('timber', 'Try a different search or filter, or clear them to see every entry.'));
+
+            const clear = document.createElement('pk-button');
+            clear.slot = 'actions';
+            clear.className = 'ti-clear-filters';
+            clear.textContent = Craft.t('timber', 'Clear filters');
+            clear.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.clearFilters();
+            });
+            panel.appendChild(clear);
+        } else {
+            panel.setAttribute('heading', Craft.t('timber', 'No log entries yet'));
+            panel.append(Craft.t('timber', 'Entries show here as soon as something is written to this file.'));
+        }
+
+        pane.appendChild(panel);
+        return pane;
+    }
+
+    private clearFilters(): void {
+        this.debouncedFetch.cancel();
+        this.onSearchInput.cancel();
+        (this.searchInput as HTMLElement & { value?: string }).value = '';
+        this.searchText = '';
+        this.search = '';
+        this.levels = null;
+        this.categories = null;
+        this.syncFilterMenuSelections('levels');
+        this.syncFilterMenuSelections('categories');
+        void this.fetchLog();
     }
 
     private syncLogTable(): void {

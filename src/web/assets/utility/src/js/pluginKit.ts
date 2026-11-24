@@ -13,6 +13,7 @@ import { PkIcon } from '@verbb/plugin-kit-web/components/icon/pk-icon.js';
 import { PkInput } from '@verbb/plugin-kit-web/components/input/pk-input.js';
 import { PkOption } from '@verbb/plugin-kit-web/components/select/pk-option.js';
 import { PkSpinner } from '@verbb/plugin-kit-web/components/spinner/pk-spinner.js';
+import { PkStatePanel } from '@verbb/plugin-kit-web/components/state-panel/pk-state-panel.js';
 
 // Opt-in glyphs for `<pk-icon icon="…">`.
 import {
@@ -60,6 +61,7 @@ const TIMBER_PK_CTORS = [
     PkInput,
     PkOption,
     PkSpinner,
+    PkStatePanel,
 ] as const;
 
 let registered = false;

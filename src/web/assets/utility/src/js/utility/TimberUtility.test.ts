@@ -229,3 +229,34 @@ describe.each(['levels', 'categories'] as const)('%s selections across searches'
         expect(request.mock.lastCall?.[2].data[type]).toEqual([]);
     });
 });
+
+describe('Empty results', () => {
+    it.each([
+        [{}, false],
+        [{ search: 'needle' }, true],
+        [{ levels: ['ERROR'] }, true],
+        [{ categories: [] }, true],
+    ])('treats %o as filtered: %s', (state, filtered) => {
+        const { utility } = makeUtility({});
+        Object.assign(utility, state);
+        expect(utility['hasActiveFilters']()).toBe(filtered);
+    });
+
+    it('clears search and facet filters and reloads unrestricted entries', async () => {
+        vi.useFakeTimers();
+        const { utility, request } = makeUtility({ logs: [{ message: 'Result' }], info: {} });
+        const input = bindSearchInput(utility);
+        input.value = 'needle';
+        Object.assign(utility, {
+            search: 'needle', searchText: 'needle', levels: ['ERROR'], categories: ['app'],
+            syncFilterMenuSelections: vi.fn(),
+        });
+        utility['debouncedFetch']();
+        utility['clearFilters']();
+        await vi.runAllTimersAsync();
+        expect(input.value).toBe('');
+        expect(utility['hasActiveFilters']()).toBe(false);
+        expect(request).toHaveBeenCalledTimes(1);
+        expect(request.mock.lastCall?.[2].data).toMatchObject({ search: '', levels: null, categories: null });
+    });
+});
